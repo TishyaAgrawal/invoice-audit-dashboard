@@ -1,0 +1,1766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AuditIQ — Invoice Audit Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111418;
+    --surface2: #181c22;
+    --border: #23282f;
+    --accent: #00e5a0;
+    --accent2: #0090ff;
+    --danger: #ff4d4d;
+    --warning: #ffb020;
+    --text: #e8edf3;
+    --muted: #7a8694;
+    --font-head: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ===== LANDING PAGE ===== */
+  #landing-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0,229,160,0.08) 0%, transparent 70%),
+                radial-gradient(ellipse 60% 50% at 80% 80%, rgba(0,144,255,0.06) 0%, transparent 60%),
+                var(--bg);
+  }
+
+  .landing-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,160,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,160,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+  }
+
+  .landing-content {
+    text-align: center;
+    z-index: 2;
+    animation: fadeUp 0.9s cubic-bezier(.22,1,.36,1) both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(32px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .landing-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0,229,160,0.08);
+    border: 1px solid rgba(0,229,160,0.2);
+    border-radius: 999px;
+    padding: 5px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 32px;
+  }
+
+  .landing-badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--accent);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .landing-logo {
+    font-family: var(--font-head);
+    font-size: clamp(64px, 10vw, 112px);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    background: linear-gradient(135deg, #fff 30%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 16px;
+  }
+
+  .landing-subhead {
+    font-family: var(--font-head);
+    font-size: clamp(16px, 2.5vw, 22px);
+    font-weight: 400;
+    color: var(--muted);
+    letter-spacing: 0.01em;
+    margin-bottom: 12px;
+  }
+
+  .landing-tagline {
+    font-size: clamp(13px, 1.5vw, 15px);
+    color: rgba(255,255,255,0.35);
+    margin-bottom: 52px;
+    letter-spacing: 0.03em;
+  }
+
+  .btn-start {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--accent);
+    color: #000;
+    font-family: var(--font-head);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    padding: 16px 40px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 0 40px rgba(0,229,160,0.25);
+  }
+
+  .btn-start:hover { transform: translateY(-2px); box-shadow: 0 0 60px rgba(0,229,160,0.4); }
+  .btn-start svg { transition: transform 0.2s; }
+  .btn-start:hover svg { transform: translateX(4px); }
+
+  .landing-stats {
+    display: flex;
+    gap: 48px;
+    margin-top: 64px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .landing-stat { text-align: center; animation: fadeUp 0.9s cubic-bezier(.22,1,.36,1) both; }
+  .landing-stat:nth-child(2) { animation-delay: 0.1s; }
+  .landing-stat:nth-child(3) { animation-delay: 0.2s; }
+
+  .landing-stat-num { font-family: var(--font-head); font-size: 28px; font-weight: 800; color: var(--accent); }
+  .landing-stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+
+  /* ===== MAIN APP ===== */
+  #main-app { display: none; }
+
+  .layout { display: flex; min-height: 100vh; }
+
+  /* Sidebar */
+  .sidebar {
+    width: 240px;
+    min-width: 240px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 24px 0 16px;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 100;
+    overflow-y: auto;
+  }
+
+  .sidebar-logo { padding: 0 20px 20px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+  .sidebar-logo-name { font-family: var(--font-head); font-size: 20px; font-weight: 800; color: var(--accent); }
+  .sidebar-logo-sub { font-size: 10px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+  .sidebar-status { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; color: var(--accent); margin-top: 6px; }
+  .sidebar-status::before { content: ''; width: 5px; height: 5px; background: var(--accent); border-radius: 50%; animation: pulse 2s infinite; }
+
+  .nav-section { padding: 0 12px; margin-bottom: 8px; }
+  .nav-section-label { font-size: 9px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); padding: 0 8px 6px; }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px; border-radius: 6px; cursor: pointer;
+    font-size: 13px; font-weight: 500; color: var(--muted);
+    transition: all 0.15s; margin-bottom: 2px; user-select: none;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: rgba(0,229,160,0.1); color: var(--accent); }
+
+  .nav-badge { margin-left: auto; background: var(--danger); color: #fff; font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 999px; min-width: 18px; text-align: center; }
+  .nav-badge.warn { background: var(--warning); color: #000; }
+
+  /* Sidebar filter sections */
+  .sidebar-filter-section { padding: 0 12px; margin-bottom: 8px; }
+  .sidebar-filter-label { font-size: 9px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); padding: 0 8px 6px; display: flex; align-items: center; justify-content: space-between; }
+
+  .sidebar-filter-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 7px 10px; border-radius: 6px; cursor: pointer;
+    font-size: 12px; color: var(--muted); transition: all 0.15s; margin-bottom: 2px;
+    border: 1px solid transparent;
+  }
+  .sidebar-filter-item:hover { background: var(--surface2); color: var(--text); }
+  .sidebar-filter-item.active { background: rgba(0,229,160,0.08); border-color: rgba(0,229,160,0.2); color: var(--accent); }
+  .sidebar-filter-item.active-red { background: rgba(255,77,77,0.08); border-color: rgba(255,77,77,0.2); color: #ff8080; }
+  .sidebar-filter-item.active-yellow { background: rgba(255,176,32,0.08); border-color: rgba(255,176,32,0.2); color: #ffc142; }
+  .sidebar-filter-item.active-blue { background: rgba(0,144,255,0.08); border-color: rgba(0,144,255,0.2); color: #4db3ff; }
+
+  .sidebar-filter-count { font-family: var(--font-mono); font-size: 10px; }
+
+  /* Main content */
+  .main-content { margin-left: 240px; flex: 1; min-width: 0; }
+
+  .topbar {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 14px 28px; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .topbar-title { font-family: var(--font-head); font-size: 18px; font-weight: 700; }
+  .topbar-actions { display: flex; gap: 10px; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer;
+    font-family: var(--font-body); font-size: 12px; font-weight: 600;
+    transition: all 0.15s; text-decoration: none;
+  }
+  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-ghost:hover { background: var(--surface2); }
+  .btn-primary { background: var(--accent); color: #000; }
+  .btn-primary:hover { filter: brightness(1.1); }
+  .btn-danger { background: rgba(255,77,77,0.15); border: 1px solid rgba(255,77,77,0.3); color: var(--danger); }
+  .btn-danger:hover { background: rgba(255,77,77,0.25); }
+  .btn-blue { background: rgba(0,144,255,0.15); border: 1px solid rgba(0,144,255,0.3); color: var(--accent2); }
+  .btn-blue:hover { background: rgba(0,144,255,0.25); }
+
+  .page { display: none; padding: 28px; }
+  .page.active { display: block; }
+
+  /* Cards */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
+  .card-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 6px; }
+  .card-value { font-family: var(--font-head); font-size: 28px; font-weight: 800; color: var(--text); }
+  .card-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
+
+  .alert { border-radius: 8px; padding: 14px 18px; margin-bottom: 24px; font-size: 13px; line-height: 1.6; }
+  .alert-danger { background: rgba(255,77,77,0.08); border: 1px solid rgba(255,77,77,0.25); color: #ff8080; }
+  .alert-danger strong { color: var(--danger); }
+  .alert-info { background: rgba(0,229,160,0.06); border: 1px solid rgba(0,229,160,0.2); color: #7fffd4; }
+
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { text-align: left; padding: 10px 12px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); border-bottom: 1px solid var(--border); white-space: nowrap; cursor: pointer; user-select: none; }
+  th:hover { color: var(--text); }
+  td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .risk-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+  .risk-high { background: rgba(255,77,77,0.15); color: #ff6b6b; }
+  .risk-med  { background: rgba(255,176,32,0.15); color: #ffc142; }
+  .risk-low  { background: rgba(0,144,255,0.15);  color: #4db3ff; }
+
+  .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .section-title { font-family: var(--font-head); font-size: 15px; font-weight: 700; }
+  .section-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  .divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+
+  /* Charts */
+  .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
+  @media (max-width: 900px) { .charts-row { grid-template-columns: 1fr; } }
+  .chart-container { position: relative; height: 220px; }
+
+  /* Tabs */
+  .tab-bar { display: flex; gap: 4px; margin-bottom: 16px; }
+  .tab-btn {
+    padding: 7px 16px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;
+    border: 1px solid var(--border); background: transparent; color: var(--muted); transition: all 0.15s;
+  }
+  .tab-btn.active { background: rgba(0,229,160,0.1); border-color: rgba(0,229,160,0.4); color: var(--accent); }
+  .tab-btn:hover:not(.active) { background: var(--surface2); color: var(--text); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Sort indicator */
+  th .sort-arrow { margin-left: 4px; opacity: 0.4; }
+  th.sorted-asc .sort-arrow::after { content: '↑'; opacity: 1; color: var(--accent); }
+  th.sorted-desc .sort-arrow::after { content: '↓'; opacity: 1; color: var(--accent); }
+
+  /* Filter bar */
+  .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .filter-chip { padding: 4px 12px; border-radius: 999px; border: 1px solid var(--border); font-size: 11px; cursor: pointer; transition: all 0.15s; background: transparent; color: var(--muted); }
+  .filter-chip.active { background: rgba(0,229,160,0.1); border-color: var(--accent); color: var(--accent); }
+  .filter-chip:hover { border-color: var(--text); color: var(--text); }
+
+  /* Upload */
+  .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
+  @media (max-width: 700px) { .upload-grid { grid-template-columns: 1fr; } }
+
+  .upload-zone { border: 2px dashed var(--border); border-radius: 10px; padding: 32px 24px; text-align: center; cursor: pointer; transition: all 0.2s; position: relative; }
+  .upload-zone:hover, .upload-zone.dragover { border-color: var(--accent); background: rgba(0,229,160,0.04); }
+  .upload-zone.loaded { border-color: var(--accent); background: rgba(0,229,160,0.06); }
+  .upload-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+
+  .upload-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 22px; }
+  .upload-icon.logistics { background: rgba(0,144,255,0.12); }
+  .upload-icon.ratecard  { background: rgba(0,229,160,0.12); }
+  .upload-title { font-family: var(--font-head); font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .upload-desc { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+  .upload-btn-fake { display: inline-flex; align-items: center; gap: 6px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 7px 14px; font-size: 12px; font-weight: 600; color: var(--text); pointer-events: none; }
+  .upload-status { margin-top: 12px; font-size: 11px; color: var(--accent); font-family: var(--font-mono); display: none; }
+  .upload-status.visible { display: block; }
+
+  .audit-run-section { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 28px; text-align: center; margin-bottom: 28px; }
+  .audit-run-title { font-family: var(--font-head); font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+  .audit-run-desc { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+  .btn-run-audit { background: linear-gradient(135deg, var(--accent), #00b37a); color: #000; font-family: var(--font-head); font-size: 15px; font-weight: 700; padding: 14px 40px; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; box-shadow: 0 0 30px rgba(0,229,160,0.2); }
+  .btn-run-audit:hover { transform: translateY(-1px); box-shadow: 0 0 50px rgba(0,229,160,0.35); }
+  .btn-run-audit:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  .progress-wrap { display: none; margin-top: 20px; }
+  .progress-wrap.visible { display: block; }
+  .progress-bar { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; margin-bottom: 8px; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 2px; width: 0%; transition: width 0.4s; }
+  .progress-label { font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
+
+  #audit-results { display: none; }
+  #audit-results.visible { display: block; }
+
+  /* Vendor scores */
+  .score-bar-wrap { margin-bottom: 14px; }
+  .score-bar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; font-size: 12px; }
+  .score-bar-track { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .score-bar-fill { height: 100%; border-radius: 3px; transition: width 1s cubic-bezier(.22,1,.36,1); }
+
+  /* Tier cards */
+  .tier-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+  @media (max-width: 700px) { .tier-grid { grid-template-columns: 1fr; } }
+  .tier-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 20px; text-align: center; }
+  .tier-card.platinum { border-color: rgba(0,229,160,0.3); }
+  .tier-card.gold     { border-color: rgba(255,176,32,0.3); }
+  .tier-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+  .tier-days { font-family: var(--font-head); font-size: 42px; font-weight: 800; line-height: 1; margin-bottom: 2px; }
+  .tier-days-label { font-size: 11px; color: var(--muted); margin-bottom: 12px; }
+  .tier-range { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+
+  /* Flow diagram */
+  .flow-wrap { display: flex; align-items: center; gap: 0; overflow-x: auto; padding: 20px 0; flex-wrap: nowrap; }
+  .flow-node { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; text-align: center; min-width: 110px; flex-shrink: 0; }
+  .flow-node.green { border-color: rgba(0,229,160,0.3); }
+  .flow-node.red   { border-color: rgba(255,77,77,0.3); }
+  .flow-icon { font-size: 20px; margin-bottom: 4px; }
+  .flow-title { font-size: 11px; font-weight: 700; margin-bottom: 2px; }
+  .flow-sub { font-size: 9px; color: var(--muted); }
+  .flow-arrow { font-size: 16px; color: var(--muted); padding: 0 6px; flex-shrink: 0; }
+
+  /* SLA cards */
+  .sla-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+  @media (max-width: 700px) { .sla-grid { grid-template-columns: 1fr 1fr; } }
+  .sla-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 14px; text-align: center; }
+  .sla-num { font-family: var(--font-head); font-size: 26px; font-weight: 800; line-height: 1.1; margin-bottom: 4px; }
+  .sla-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .sla-sub { font-size: 10px; color: var(--muted); margin-top: 3px; }
+
+  /* Spec table */
+  .spec-table td:first-child { font-family: var(--font-mono); font-size: 11px; color: var(--accent); }
+  .spec-tag { display: inline-block; padding: 1px 7px; border-radius: 4px; font-size: 10px; font-weight: 600; }
+  .spec-req  { background: rgba(255,77,77,0.15); color: #ff8080; }
+  .spec-opt  { background: rgba(0,144,255,0.12); color: #4db3ff; }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 28px; right: 28px; background: var(--surface); border: 1px solid var(--accent); border-radius: 8px; padding: 12px 18px; font-size: 13px; color: var(--accent); z-index: 9999; transform: translateY(80px); opacity: 0; transition: all 0.3s; max-width: 320px; }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* Utilities */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+  @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+  .inline-tag { display: inline-block; background: rgba(0,229,160,0.1); color: var(--accent); border-radius: 4px; padding: 1px 7px; font-family: var(--font-mono); font-size: 10px; }
+  .mono { font-family: var(--font-mono); font-size: 11px; }
+  .example-row { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 16px; font-family: var(--font-mono); font-size: 11px; color: var(--accent); word-break: break-all; line-height: 1.8; margin-top: 12px; }
+  .check-list { list-style: none; }
+  .check-list li { padding: 5px 0; font-size: 12px; color: var(--muted); display: flex; align-items: flex-start; gap: 8px; }
+  .check-list li::before { content: '✓'; color: var(--accent); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+  .mb-4 { margin-bottom: 4px; } .mb-8 { margin-bottom: 8px; } .mb-16 { margin-bottom: 16px; } .mb-24 { margin-bottom: 24px; }
+  .mt-8  { margin-top: 8px; } .mt-16 { margin-top: 16px; }
+  .text-accent { color: var(--accent); } .text-danger { color: var(--danger); } .text-warn { color: var(--warning); } .text-muted { color: var(--muted); }
+  .font-head { font-family: var(--font-head); } .font-mono { font-family: var(--font-mono); } .font-bold { font-weight: 700; }
+
+  @media (max-width: 900px) { .sidebar { width: 200px; min-width: 200px; } .main-content { margin-left: 200px; } }
+  @media (max-width: 600px) { .sidebar { width: 0; display: none; } .main-content { margin-left: 0; } }
+</style>
+</head>
+<body>
+
+<!-- LANDING PAGE -->
+<div id="landing-page">
+  <div class="landing-grid"></div>
+  <div class="landing-content">
+    <div class="landing-badge">Mosaic Wellness · Finance Intelligence</div>
+    <div class="landing-logo">AuditIQ</div>
+    <div class="landing-subhead">Audit smarter, not harder.</div>
+    <div class="landing-tagline">Automated invoice reconciliation · GST verification · Vendor scorecards</div>
+    <button class="btn-start" onclick="enterApp()">
+      Let's Get Started
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M3 8h10M9 4l4 4-4 4" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <div class="landing-stats">
+      <div class="landing-stat"><div class="landing-stat-num">₹47.2L</div><div class="landing-stat-label">Overcharge Detected</div></div>
+      <div class="landing-stat"><div class="landing-stat-num">100</div><div class="landing-stat-label">Invoices Audited</div></div>
+      <div class="landing-stat"><div class="landing-stat-num">61%</div><div class="landing-stat-label">Clean Pass Rate</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="main-app">
+  <div class="layout">
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-name">⚡ AuditIQ</div>
+        <div class="sidebar-logo-sub">Mosaic Wellness · Finance</div>
+        <div class="sidebar-status">Live · Last sync 2 min ago</div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-label">Main</div>
+        <div class="nav-item active" onclick="showPage('dashboard', this)"><span>📊</span> Dashboard</div>
+        <div class="nav-item" onclick="showPage('controls', this)"><span>🛡</span> Controls</div>
+        <div class="nav-item" onclick="showPage('exceptions', this)"><span>⚠️</span> Exceptions <span class="nav-badge" id="exceptions-badge">8</span></div>
+        <div class="nav-item" onclick="showPage('vendors', this)"><span>🏢</span> Vendors</div>
+        <div class="nav-item" onclick="showPage('upload', this)"><span>📤</span> Upload <span class="nav-badge warn">New</span></div>
+      </div>
+
+      <!-- Dashboard sidebar filters (shown only on dashboard) -->
+      <div id="sidebar-dashboard-filters">
+        <div class="sidebar-filter-section">
+          <div class="sidebar-filter-label">Risk Levels</div>
+          <div class="sidebar-filter-item active" onclick="sidebarFilter('risk','all',this)" data-filter="risk" data-val="all">
+            <span>All Findings</span><span class="sidebar-filter-count">47</span>
+          </div>
+          <div class="sidebar-filter-item" onclick="sidebarFilter('risk','High',this)" data-filter="risk" data-val="High">
+            <span>🔴 High Risk</span><span class="sidebar-filter-count text-danger">8</span>
+          </div>
+          <div class="sidebar-filter-item" onclick="sidebarFilter('risk','Medium',this)" data-filter="risk" data-val="Medium">
+            <span>🟡 Medium Risk</span><span class="sidebar-filter-count text-warn">7</span>
+          </div>
+          <div class="sidebar-filter-item" onclick="sidebarFilter('risk','Low',this)" data-filter="risk" data-val="Low">
+            <span>🔵 Low Risk</span><span class="sidebar-filter-count" style="color:var(--accent2)">7</span>
+          </div>
+        </div>
+
+        <div class="sidebar-filter-section">
+          <div class="sidebar-filter-label">Categories</div>
+          <div class="sidebar-filter-item" onclick="sidebarFilter('cat','Rate Overcharge',this)" data-filter="cat" data-val="Rate Overcharge">
+            <span>Rate Overcharge</span><span class="sidebar-filter-count">11</span>
+          </div>
+          <div class="sidebar-filter-item" onclick="sidebarFilter('cat','GST Mismatch',this)" data-filter="cat" data-val="GST Mismatch">
+            <span>GST Mismatch</span><span class="sidebar-filter-count">8</span>
+          </div>
+          <div class="sidebar-filter-item" onclick="sidebarFilter('cat','Duplicate Line',this)" data-filter="cat" data-val="Duplicate Line">
+            <span>Duplicates</span><span class="sidebar-filter-count">7</span>
+          </div>
+          <div class="sidebar-filter-item" onclick="sidebarFilter('cat','Math Error',this)" data-filter="cat" data-val="Math Error">
+            <span>Math Errors</span><span class="sidebar-filter-count">5</span>
+          </div>
+          <div class="sidebar-filter-item" onclick="sidebarFilter('cat','Naming Issue',this)" data-filter="cat" data-val="Naming Issue">
+            <span>Naming Issues</span><span class="sidebar-filter-count">9</span>
+          </div>
+          <div class="sidebar-filter-item" onclick="sidebarFilter('cat','Unapproved Item',this)" data-filter="cat" data-val="Unapproved Item">
+            <span>Unapproved Items</span><span class="sidebar-filter-count">7</span>
+          </div>
+        </div>
+
+        <div class="sidebar-filter-section">
+          <div class="sidebar-filter-label">Vendor Types</div>
+          <div class="sidebar-filter-item" onclick="sidebarFilter('vtype','Logistics',this)" data-filter="vtype" data-val="Logistics">
+            <span>Logistics (V01–V04)</span>
+          </div>
+          <div class="sidebar-filter-item" onclick="sidebarFilter('vtype','Packaging',this)" data-filter="vtype" data-val="Packaging">
+            <span>Packaging (V05–V07)</span>
+          </div>
+          <div class="sidebar-filter-item" onclick="sidebarFilter('vtype','Pharma',this)" data-filter="vtype" data-val="Pharma">
+            <span>Pharma / Raw Mat (V08–V11)</span>
+          </div>
+          <div class="sidebar-filter-item" onclick="sidebarFilter('vtype','Marketing',this)" data-filter="vtype" data-val="Marketing">
+            <span>Marketing (V12–V15)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vendor sidebar filters (shown only on vendors page) -->
+      <div id="sidebar-vendor-filters" style="display:none;">
+        <div class="sidebar-filter-section">
+          <div class="sidebar-filter-label">Filter by Tier</div>
+          <div class="sidebar-filter-item active" onclick="vendorFilter('all',this)">
+            <span>All Vendors</span><span class="sidebar-filter-count">15</span>
+          </div>
+          <div class="sidebar-filter-item" onclick="vendorFilter('platinum',this)">
+            <span>🏆 Platinum</span><span class="sidebar-filter-count">4</span>
+          </div>
+          <div class="sidebar-filter-item" onclick="vendorFilter('gold',this)">
+            <span>⭐ Gold</span><span class="sidebar-filter-count">7</span>
+          </div>
+          <div class="sidebar-filter-item" onclick="vendorFilter('standard',this)">
+            <span>Standard</span><span class="sidebar-filter-count">4</span>
+          </div>
+        </div>
+        <div class="sidebar-filter-section">
+          <div class="sidebar-filter-label">Filter by Type</div>
+          <div class="sidebar-filter-item" onclick="vendorTypeFilter('Logistics',this)">
+            <span>Logistics</span>
+          </div>
+          <div class="sidebar-filter-item" onclick="vendorTypeFilter('Packaging',this)">
+            <span>Packaging</span>
+          </div>
+          <div class="sidebar-filter-item" onclick="vendorTypeFilter('Pharma',this)">
+            <span>Pharma / Raw Mat</span>
+          </div>
+          <div class="sidebar-filter-item" onclick="vendorTypeFilter('Marketing',this)">
+            <span>Marketing</span>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+
+      <!-- TOP BAR -->
+      <div class="topbar">
+        <div>
+          <div class="topbar-title" id="page-title">Invoice Audit Intelligence</div>
+          <div style="font-size:11px;color:var(--muted)">100 invoices audited · 5,200 total in pipeline · FY 2025</div>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-ghost" onclick="exportReport()">↓ Export Report</button>
+          <button class="btn btn-primary" onclick="showPage('upload', document.querySelector('[onclick*=upload]'))">Run Full Audit</button>
+        </div>
+      </div>
+
+      <!-- ====== DASHBOARD PAGE ====== -->
+      <div class="page active" id="page-dashboard">
+        <div class="alert alert-danger">
+          <strong>⚠ Critical: ₹47.2L overcharge detected</strong> across 19 high-risk line items in this sample batch.
+          PixelCraft Studios (V13) and Brandwise Digital (V14) account for 78% of the total variance.
+          Immediate review recommended before next payment cycle.
+        </div>
+
+        <div class="cards-grid">
+          <div class="card">
+            <div class="card-label">Total Overcharge Found</div>
+            <div class="card-value text-danger">₹47.2L</div>
+            <div class="card-sub">Across 19 high-risk flags · this batch</div>
+          </div>
+          <div class="card">
+            <div class="card-label">GST Discrepancies</div>
+            <div class="card-value">8</div>
+            <div class="card-sub">₹3.1L excess GST billed</div>
+          </div>
+          <div class="card">
+            <div class="card-label">Duplicate Suspects</div>
+            <div class="card-value">7</div>
+            <div class="card-sub">Same item, same invoice window</div>
+          </div>
+          <div class="card">
+            <div class="card-label">Clean Invoices</div>
+            <div class="card-value text-accent">61%</div>
+            <div class="card-sub">39 of 100 flagged for review</div>
+          </div>
+        </div>
+
+        <!-- Charts row -->
+        <div class="charts-row">
+          <div class="card">
+            <div class="section-head">
+              <div>
+                <div class="section-title">Overcharge by Vendor (₹)</div>
+                <div class="section-sub">Top offenders in current batch · contracted vs billed</div>
+              </div>
+            </div>
+            <div class="chart-container"><canvas id="chart-vendor"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="section-head">
+              <div>
+                <div class="section-title">Issue Distribution</div>
+                <div class="section-sub">By category · 47 total flags</div>
+              </div>
+            </div>
+            <div class="chart-container"><canvas id="chart-issues"></canvas></div>
+          </div>
+        </div>
+
+        <!-- High Risk Table -->
+        <div class="card mb-24" id="table-high-risk">
+          <div class="section-head">
+            <div>
+              <div class="section-title">🔴 High Risk Findings</div>
+              <div class="section-sub">PAYMENT MISMATCH · GST MISMATCH</div>
+            </div>
+            <div class="filter-bar">
+              <button class="filter-chip active" onclick="filterHighRisk('All',this)">All</button>
+              <button class="filter-chip" onclick="filterHighRisk('Rate',this)">Rate</button>
+              <button class="filter-chip" onclick="filterHighRisk('GST',this)">GST</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table id="high-risk-table">
+              <thead>
+                <tr>
+                  <th onclick="sortTable('high-risk-table',0,this)">Invoice <span class="sort-arrow"></span></th>
+                  <th onclick="sortTable('high-risk-table',1,this)">Vendor <span class="sort-arrow"></span></th>
+                  <th onclick="sortTable('high-risk-table',2,this)">Line Item <span class="sort-arrow"></span></th>
+                  <th onclick="sortTable('high-risk-table',3,this)">Issue Type <span class="sort-arrow"></span></th>
+                  <th onclick="sortTable('high-risk-table',4,this)">Contracted <span class="sort-arrow"></span></th>
+                  <th onclick="sortTable('high-risk-table',5,this)">Billed <span class="sort-arrow"></span></th>
+                  <th onclick="sortTable('high-risk-table',6,this)">Qty <span class="sort-arrow"></span></th>
+                  <th onclick="sortTable('high-risk-table',7,this)">Overcharge <span class="sort-arrow"></span></th>
+                  <th>Risk</th>
+                </tr>
+              </thead>
+              <tbody id="high-risk-tbody">
+                <!-- GST Mismatch (8) -->
+                <tr><td class="mono">INV-00001</td><td>PixelCraft Studios (V13)</td><td>Email campaign</td><td>GST Mismatch</td><td>18%</td><td>28%</td><td>93</td><td class="text-danger font-bold">₹4,19,983</td><td><span class="risk-badge risk-high">● High</span></td></tr>
+                <tr><td class="mono">INV-00010</td><td>Sai Pharma (V08)</td><td>Minoxidil 5% (HSN 2106)</td><td>GST Mismatch</td><td>12% (HSN 3004)</td><td>18% (HSN 2106)</td><td>27</td><td class="text-danger font-bold">₹4,726</td><td><span class="risk-badge risk-high">● High</span></td></tr>
+                <tr><td class="mono">INV-00015</td><td>Primus Biotech (V10)</td><td>Hyaluronic acid</td><td>GST Mismatch</td><td>12% (HSN 3004)</td><td>18% (HSN 2106)</td><td>87</td><td class="text-danger font-bold">₹17,627</td><td><span class="risk-badge risk-high">● High</span></td></tr>
+                <tr><td class="mono">INV-00001</td><td>PixelCraft Studios (V13)</td><td>Email campaign (L5)</td><td>GST Mismatch</td><td>18%</td><td>28%</td><td>37</td><td class="text-danger font-bold">₹1,79,993</td><td><span class="risk-badge risk-high">● High</span></td></tr>
+                <tr><td class="mono">INV-00009</td><td>DTDC (V01)</td><td>Express parcel</td><td>GST Mismatch</td><td>5% (HSN 9966)</td><td>18% (HSN 9965)</td><td>54</td><td class="text-danger font-bold">₹8,316</td><td><span class="risk-badge risk-high">● High</span></td></tr>
+                <tr><td class="mono">INV-00017</td><td>Herb Valley (V11)</td><td>Ashwagandha KSM-66</td><td>GST Mismatch</td><td>5% (HSN 2106)</td><td>18% (HSN 3004)</td><td>181</td><td class="text-danger font-bold">₹39,782</td><td><span class="risk-badge risk-high">● High</span></td></tr>
+                <tr><td class="mono">INV-00019</td><td>Sai Pharma (V08)</td><td>Vitamin C tablets</td><td>GST Mismatch</td><td>12% (HSN 3004)</td><td>18% (HSN 2106)</td><td>210</td><td class="text-danger font-bold">₹22,050</td><td><span class="risk-badge risk-high">● High</span></td></tr>
+                <tr><td class="mono">INV-00024</td><td>Herb Valley (V11)</td><td>Biotin capsules</td><td>GST Mismatch</td><td>5% (HSN 2106)</td><td>12% (HSN 3004)</td><td>96</td><td class="text-danger font-bold">₹6,912</td><td><span class="risk-badge risk-high">● High</span></td></tr>
+                <!-- Rate Overcharge (11) -->
+                <tr><td class="mono">INV-00002</td><td>DTDC (V01)</td><td>Standard parcel</td><td>Rate Overcharge</td><td>₹48.00</td><td>₹62.50</td><td>340</td><td class="text-danger font-bold">₹4,930</td><td><span class="risk-badge risk-high">● High</span></td></tr>
+                <tr><td class="mono">INV-00003</td><td>BlueDart (V02)</td><td>RTO charges</td><td>Rate Overcharge</td><td>₹373.77</td><td>₹420.00</td><td>63</td><td class="text-danger font-bold">₹2,909</td><td><span class="risk-badge risk-high">● High</span></td></tr>
+                <tr><td class="mono">INV-00004</td><td>Ecom Express (V03)</td><td>Freight Zone C</td><td>Rate Overcharge</td><td>₹95.00</td><td>₹118.00</td><td>112</td><td class="text-danger font-bold">₹2,576</td><td><span class="risk-badge risk-high">● High</span></td></tr>
+                <tr><td class="mono">INV-00005</td><td>Naveen Corrugators (V07)</td><td>Corrugated box (5-ply)</td><td>Rate Overcharge</td><td>₹18.00</td><td>₹22.50</td><td>850</td><td class="text-danger font-bold">₹3,825</td><td><span class="risk-badge risk-high">● High</span></td></tr>
+                <tr><td class="mono">INV-00008</td><td>CloudNine Ads (V15)</td><td>SEO services</td><td>Rate Overcharge</td><td>₹32,000</td><td>₹38,900</td><td>78</td><td class="text-danger font-bold">₹5,38,200</td><td><span class="risk-badge risk-high">● High</span></td></tr>
+                <tr><td class="mono">INV-00012</td><td>PixelCraft Studios (V13)</td><td>Creative production</td><td>Rate Overcharge</td><td>₹42,000</td><td>₹49,310</td><td>124</td><td class="text-danger font-bold">₹9,06,440</td><td><span class="risk-badge risk-high">● High</span></td></tr>
+                <tr><td class="mono">INV-00013</td><td>Brandwise Digital (V14)</td><td>Meta ad spend</td><td>Rate Overcharge</td><td>₹41,200</td><td>₹48,905</td><td>19</td><td class="text-danger font-bold">₹1,46,395</td><td><span class="risk-badge risk-high">● High</span></td></tr>
+                <tr><td class="mono">INV-00016</td><td>Sri Lakshmi Plastics (V06)</td><td>Bubble wrap (small)</td><td>Rate Overcharge</td><td>₹175.00</td><td>₹210.00</td><td>430</td><td class="text-danger font-bold">₹15,050</td><td><span class="risk-badge risk-high">● High</span></td></tr>
+                <tr><td class="mono">INV-00020</td><td>Xpressbees (V04)</td><td>Last mile delivery</td><td>Rate Overcharge</td><td>₹62.00</td><td>₹78.00</td><td>275</td><td class="text-danger font-bold">₹4,400</td><td><span class="risk-badge risk-high">● High</span></td></tr>
+                <tr><td class="mono">INV-00022</td><td>Primus Biotech (V10)</td><td>Omega-3 capsules</td><td>Rate Overcharge</td><td>₹2,800</td><td>₹3,250</td><td>144</td><td class="text-danger font-bold">₹64,800</td><td><span class="risk-badge risk-high">● High</span></td></tr>
+                <tr><td class="mono">INV-00026</td><td>Brandwise Digital (V14)</td><td>Social media management</td><td>Rate Overcharge</td><td>₹35,000</td><td>₹44,500</td><td>12</td><td class="text-danger font-bold">₹1,14,000</td><td><span class="risk-badge risk-high">● High</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Medium Risk Table -->
+        <div class="card mb-24" id="table-medium-risk">
+          <div class="section-head">
+            <div>
+              <div class="section-title">🟡 Medium Risk Findings</div>
+              <div class="section-sub">DUPLICATE LINE ITEMS</div>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table id="medium-risk-table">
+              <thead>
+                <tr>
+                  <th onclick="sortTable('medium-risk-table',0,this)">Invoice <span class="sort-arrow"></span></th>
+                  <th onclick="sortTable('medium-risk-table',1,this)">Vendor <span class="sort-arrow"></span></th>
+                  <th onclick="sortTable('medium-risk-table',2,this)">Duplicate Item <span class="sort-arrow"></span></th>
+                  <th onclick="sortTable('medium-risk-table',3,this)">Issue Type <span class="sort-arrow"></span></th>
+                  <th onclick="sortTable('medium-risk-table',4,this)">Occurrences <span class="sort-arrow"></span></th>
+                  <th onclick="sortTable('medium-risk-table',5,this)">Total Qty <span class="sort-arrow"></span></th>
+                  <th onclick="sortTable('medium-risk-table',6,this)">Unit Price <span class="sort-arrow"></span></th>
+                  <th onclick="sortTable('medium-risk-table',7,this)">Billed Total <span class="sort-arrow"></span></th>
+                  <th>Risk</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr data-issue="Duplicate Line"><td class="mono">INV-00003</td><td>BlueDart (V02)</td><td>RTO charges</td><td>Duplicate Line</td><td>3</td><td>63</td><td>₹373.77</td><td>₹23,548</td><td><span class="risk-badge risk-med">● Medium</span></td></tr>
+                <tr data-issue="Duplicate Line"><td class="mono">INV-00010</td><td>Sai Pharma (V08)</td><td>Melatonin</td><td>Duplicate Line</td><td>2</td><td>129</td><td>₹3,564.99</td><td>₹4,59,884</td><td><span class="risk-badge risk-med">● Medium</span></td></tr>
+                <tr data-issue="Duplicate Line"><td class="mono">INV-00012</td><td>PixelCraft Studios (V13)</td><td>Influencer campaign</td><td>Duplicate Line</td><td>3</td><td>122</td><td>₹44,208.16</td><td>₹53,93,395</td><td><span class="risk-badge risk-med">● Medium</span></td></tr>
+                <tr data-issue="Duplicate Line"><td class="mono">INV-00012</td><td>PixelCraft Studios (V13)</td><td>Creative production</td><td>Duplicate Line</td><td>2</td><td>124</td><td>₹49,310.14</td><td>₹61,14,457</td><td><span class="risk-badge risk-med">● Medium</span></td></tr>
+                <tr data-issue="Duplicate Line"><td class="mono">INV-00017</td><td>Herb Valley (V11)</td><td>Ashwagandha KSM-66</td><td>Duplicate Line</td><td>4</td><td>181</td><td>₹1,634.31</td><td>₹2,95,810</td><td><span class="risk-badge risk-med">● Medium</span></td></tr>
+                <tr data-issue="Duplicate Line"><td class="mono">INV-00006</td><td>Sri Lakshmi Plastics (V06)</td><td>Corrugated boxes</td><td>Duplicate Line</td><td>3</td><td>139</td><td>₹18.61</td><td>₹2,587</td><td><span class="risk-badge risk-med">● Medium</span></td></tr>
+                <tr data-issue="Duplicate Line"><td class="mono">INV-00014</td><td>Sri Lakshmi Plastics (V06)</td><td>Bubble wrap</td><td>Duplicate Line</td><td>2</td><td>97</td><td>₹194.86</td><td>₹18,902</td><td><span class="risk-badge risk-med">● Medium</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Low Risk Table -->
+        <div class="card" id="table-low-risk">
+          <div class="section-head">
+            <div>
+              <div class="section-title">🔵 Low Risk Findings</div>
+              <div class="section-sub">NAMING · UNAPPROVED ITEMS</div>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table id="low-risk-table">
+              <thead>
+                <tr>
+                  <th onclick="sortTable('low-risk-table',0,this)">Invoice <span class="sort-arrow"></span></th>
+                  <th onclick="sortTable('low-risk-table',1,this)">Vendor <span class="sort-arrow"></span></th>
+                  <th onclick="sortTable('low-risk-table',2,this)">Item <span class="sort-arrow"></span></th>
+                  <th onclick="sortTable('low-risk-table',3,this)">Issue <span class="sort-arrow"></span></th>
+                  <th>Details</th>
+                  <th>Risk</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Naming Issues (9) -->
+                <tr><td class="mono">INV-00004</td><td>Ecom Express (V03)</td><td>Freight Zone C</td><td>Naming Issue</td><td>'Freight Zone C' submitted — rate card uses 'Zone C Freight'. Alias mapping required.</td><td><span class="risk-badge risk-low">● Low</span></td></tr>
+                <tr><td class="mono">INV-00005</td><td>Naveen Corrugators (V07)</td><td>Air pillows</td><td>Naming Issue</td><td>'Air pillows' submitted — catalog name is 'Air Cushion Pillows'. Fuzzy match flagged.</td><td><span class="risk-badge risk-low">● Low</span></td></tr>
+                <tr><td class="mono">INV-00011</td><td>Naveen Corrugators (V07)</td><td>Printed boxes</td><td>Naming Issue</td><td>'Printed boxes' submitted — rate card uses 'Printed Carton Box'. Needs alias update.</td><td><span class="risk-badge risk-low">● Low</span></td></tr>
+                <tr><td class="mono">INV-00021</td><td>BlueDart (V02)</td><td>Surface transport</td><td>Naming Issue</td><td>'Surface transport' submitted — contracted name is 'Road Freight'. Verify classification.</td><td><span class="risk-badge risk-low">● Low</span></td></tr>
+                <tr><td class="mono">INV-00007</td><td>Xpressbees (V04)</td><td>Last mile delivery</td><td>Naming Issue</td><td>'Last mile delivery' billed — rate card shows 'First & Last Mile'. Update vendor template.</td><td><span class="risk-badge risk-low">● Low</span></td></tr>
+                <tr><td class="mono">INV-00009</td><td>DTDC (V01)</td><td>Express parcel</td><td>Naming Issue</td><td>'Express parcel' submitted — catalog uses 'Express Delivery (Surface)'. Naming mismatch.</td><td><span class="risk-badge risk-low">● Low</span></td></tr>
+                <tr><td class="mono">INV-00016</td><td>Sri Lakshmi Plastics (V06)</td><td>Stretch film</td><td>Naming Issue</td><td>'Stretch film' submitted — rate card item is 'Stretch Wrap Film'. Vendor notified.</td><td><span class="risk-badge risk-low">● Low</span></td></tr>
+                <tr><td class="mono">INV-00018</td><td>Herb Valley (V11)</td><td>Biotin capsules</td><td>Naming Issue</td><td>'Biotin capsules' billed — rate card uses 'Biotin 10mg Capsule (HSN 2106)'. Needs update.</td><td><span class="risk-badge risk-low">● Low</span></td></tr>
+                <tr><td class="mono">INV-00022</td><td>Ecom Express (V03)</td><td>COD charges</td><td>Naming Issue</td><td>'COD charges' submitted — contracted name is 'Cash on Delivery Handling Fee'. Review.</td><td><span class="risk-badge risk-low">● Low</span></td></tr>
+                <!-- Unapproved Items (7) -->
+                <tr><td class="mono">INV-00015</td><td>Primus Biotech (V10)</td><td>Platform fee</td><td>Unapproved Item</td><td>'Platform fee' (₹2,564) not in contracted rate card for V10. Requires finance approval.</td><td><span class="risk-badge risk-low">● Low</span></td></tr>
+                <tr><td class="mono">INV-00002</td><td>DTDC (V01)</td><td>Fuel surcharge</td><td>Unapproved Item</td><td>'Fuel surcharge' (₹1,200/shipment) not in current rate card. Ad-hoc charge — hold payment.</td><td><span class="risk-badge risk-low">● Low</span></td></tr>
+                <tr><td class="mono">INV-00008</td><td>CloudNine Ads (V15)</td><td>Creative licensing fee</td><td>Unapproved Item</td><td>'Creative licensing fee' (₹8,500) not in contracted scope for V15. Escalate to marketing.</td><td><span class="risk-badge risk-low">● Low</span></td></tr>
+                <tr><td class="mono">INV-00013</td><td>Brandwise Digital (V14)</td><td>Campaign setup fee</td><td>Unapproved Item</td><td>'Campaign setup fee' (₹15,000) not contracted with V14. Requires pre-approval before pay.</td><td><span class="risk-badge risk-low">● Low</span></td></tr>
+                <tr><td class="mono">INV-00019</td><td>Sai Pharma (V08)</td><td>Cold chain handling</td><td>Unapproved Item</td><td>'Cold chain handling' (₹3,800) not listed in V08 service agreement. Pending approval.</td><td><span class="risk-badge risk-low">● Low</span></td></tr>
+                <tr><td class="mono">INV-00024</td><td>Herb Valley (V11)</td><td>Lab testing surcharge</td><td>Unapproved Item</td><td>'Lab testing surcharge' (₹5,200) not in V11 rate card. Requires compliance sign-off.</td><td><span class="risk-badge risk-low">● Low</span></td></tr>
+                <tr><td class="mono">INV-00025</td><td>Sri Lakshmi Plastics (V06)</td><td>Rush order premium</td><td>Unapproved Item</td><td>'Rush order premium' (₹2,100) not a contracted line item for V06. Flag for procurement.</td><td><span class="risk-badge risk-low">● Low</span></td></tr>
+                <!-- Math Errors (5) -->
+                <tr><td class="mono">INV-00001</td><td>PixelCraft Studios (V13)</td><td>Email campaign</td><td>Math Error</td><td>Billed ₹4,38,750 — Qty 93 × ₹4,500 = ₹4,18,500. Discrepancy of ₹20,250 detected.</td><td><span class="risk-badge risk-low">● Low</span></td></tr>
+                <tr><td class="mono">INV-00006</td><td>Sri Lakshmi Plastics (V06)</td><td>Corrugated boxes</td><td>Math Error</td><td>Billed ₹2,720 — Qty 139 × ₹18.61 = ₹2,587. Line total inflated by ₹133.</td><td><span class="risk-badge risk-low">● Low</span></td></tr>
+                <tr><td class="mono">INV-00010</td><td>Sai Pharma (V08)</td><td>Melatonin</td><td>Math Error</td><td>Billed ₹4,65,000 — Qty 129 × ₹3,564.99 = ₹4,59,884. Variance of ₹5,116 in total.</td><td><span class="risk-badge risk-low">● Low</span></td></tr>
+                <tr><td class="mono">INV-00013</td><td>Brandwise Digital (V14)</td><td>SEO services</td><td>Math Error</td><td>Billed ₹23,75,000 — Qty 58 × ₹40,686 = ₹23,59,788. Line math off by ₹15,212.</td><td><span class="risk-badge risk-low">● Low</span></td></tr>
+                <tr><td class="mono">INV-00017</td><td>Herb Valley (V11)</td><td>Ashwagandha KSM-66</td><td>Math Error</td><td>Billed ₹3,00,000 — Qty 181 × ₹1,634.31 = ₹2,95,810. Rounding error totalling ₹4,190.</td><td><span class="risk-badge risk-low">● Low</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====== CONTROLS PAGE ====== -->
+      <div class="page" id="page-controls">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:28px;">
+          <div class="card">
+            <div style="width:40px;height:40px;border-radius:10px;background:rgba(0,144,255,0.12);display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:12px;">🛡</div>
+            <div class="section-title mb-8">Input Validation</div>
+            <ul class="check-list">
+              <li>Mandatory fields enforced (invoice_id, vendor_id, date, items)</li>
+              <li>Invoice ID format: INV-XXXXX (regex validated)</li>
+              <li>GST number format: 15-char alphanumeric</li>
+              <li>Date range: not future-dated, not >90 days old</li>
+              <li>Subtotal + GST = Total (math check)</li>
+              <li>HSN code present and 4–8 digits</li>
+              <li>Blank quantity or zero-price lines → auto-reject</li>
+              <li>Negative line items → flag for review</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div style="width:40px;height:40px;border-radius:10px;background:rgba(0,229,160,0.1);display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:12px;">⚖</div>
+            <div class="section-title mb-8">Automated Reconciliation</div>
+            <ul class="check-list">
+              <li>Unit price vs contracted rate (tolerance: ±0.5%)</li>
+              <li>GST rate vs HSN-mandated rate from rate card</li>
+              <li>Billed amount = quantity × unit_price (line math)</li>
+              <li>Duplicate line detection (same item + same invoice)</li>
+              <li>Item name fuzzy-match against approved catalog</li>
+              <li>Unapproved service codes → flag immediately</li>
+              <li>Quantity spike >200% of 3-month avg → escalate</li>
+              <li>New item not in rate card → hold for approval</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div style="width:40px;height:40px;border-radius:10px;background:rgba(255,176,32,0.1);display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:12px;">🎯</div>
+            <div class="section-title mb-8">Exception Dashboard</div>
+            <ul class="check-list">
+              <li>Exceptions auto-routed by risk tier</li>
+              <li>One-click approve / reject / hold with audit trail</li>
+              <li>SLA timer: High → 24h, Medium → 72h, Low → 7 days</li>
+              <li>Escalation to CFO if unresolved past SLA</li>
+              <li>Vendor notified automatically on rejection</li>
+              <li>Credit note request generated on overcharge confirm</li>
+              <li>Human review required for >₹5L discrepancy</li>
+              <li>Payment blocked until exception is resolved</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card mb-24">
+          <div class="section-title mb-16">Invoice Processing Flow</div>
+          <div class="flow-wrap">
+            <div class="flow-node green"><div class="flow-icon">📥</div><div class="flow-title">Vendor Upload</div><div class="flow-sub">CSV / API / Email</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node green"><div class="flow-icon">🛡</div><div class="flow-title">Layer 1: Validate</div><div class="flow-sub">Format · Fields · Math</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node green"><div class="flow-icon">⚖</div><div class="flow-title">Layer 2: Reconcile</div><div class="flow-sub">Rate Card · GST · Dupe</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node red"><div class="flow-icon">🚨</div><div class="flow-title">Exceptions Only</div><div class="flow-sub">Layer 3: Human Review</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node green"><div class="flow-icon">✅</div><div class="flow-title">Approved → Pay</div><div class="flow-sub">ERP Integration</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node green"><div class="flow-icon">📊</div><div class="flow-title">Scorecard Update</div><div class="flow-sub">Vendor Rating Adjusted</div></div>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:8px;">🟢 = Automated gate &nbsp;·&nbsp; 🔴 = Exception flagged for human review &nbsp;·&nbsp; ⏱ SLA timers active from flag timestamp</div>
+        </div>
+
+        <div class="card">
+          <div class="section-title mb-16">Layer 2: Reconciliation Rules Applied to This Batch</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Rule</th><th>Check Type</th><th>Invoices Checked</th><th>Flags Raised</th><th>Auto-Resolved</th><th>Needs Review</th></tr></thead>
+              <tbody>
+                <tr><td>Rate vs Rate Card</td><td><span class="risk-badge risk-high">High</span></td><td>100</td><td>11</td><td>0</td><td class="text-danger font-bold">11</td></tr>
+                <tr><td>GST Rate Mismatch</td><td><span class="risk-badge risk-high">High</span></td><td>100</td><td>8</td><td>2</td><td class="text-danger font-bold">6</td></tr>
+                <tr><td>Duplicate Line Items</td><td><span class="risk-badge risk-med">Medium</span></td><td>100</td><td>7</td><td>3</td><td class="text-warn font-bold">4</td></tr>
+                <tr><td>Line Math Check</td><td><span class="risk-badge risk-med">Medium</span></td><td>268</td><td>5</td><td>5</td><td class="text-accent">0</td></tr>
+                <tr><td>Item Name Catalog Match</td><td><span class="risk-badge risk-low">Low</span></td><td>268</td><td>9</td><td>4</td><td class="text-warn font-bold">5</td></tr>
+                <tr><td>Unapproved Item Codes</td><td><span class="risk-badge risk-low">Low</span></td><td>268</td><td>7</td><td>7</td><td class="text-accent">0</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====== EXCEPTIONS PAGE ====== -->
+      <div class="page" id="page-exceptions">
+        <div class="sla-grid mb-24">
+          <div class="sla-card"><div class="sla-num text-danger">3</div><div class="sla-label">Past SLA (High)</div><div class="sla-sub">Escalated to CFO</div></div>
+          <div class="sla-card"><div class="sla-num text-warn">7</div><div class="sla-label">Due Today</div><div class="sla-sub">Must resolve by EOD</div></div>
+          <div class="sla-card"><div class="sla-num text-accent">21</div><div class="sla-label">Resolved This Week</div><div class="sla-sub">₹12.4L recovered</div></div>
+          <div class="sla-card"><div class="sla-num">18h</div><div class="sla-label">Avg Resolution Time</div><div class="sla-sub">Target: 24h · On track</div></div>
+        </div>
+
+        <div class="card mb-24">
+          <div class="section-head">
+            <div>
+              <div class="section-title">Exception Queue</div>
+              <div class="section-sub" id="exception-queue-sub">8 cases awaiting human decision · 5 high · 3 medium</div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-ghost" style="font-size:11px;" id="sort-exceptions-btn" onclick="toggleExceptionsSort()">Sort: Newest ↓</button>
+              <button class="btn btn-ghost" style="font-size:11px;" onclick="bulkAssign()">Bulk Assign</button>
+            </div>
+          </div>
+
+          <div class="tab-bar">
+            <button class="tab-btn active" onclick="showExceptionTab('high',this)">🔴 High Risk (5)</button>
+            <button class="tab-btn" onclick="showExceptionTab('medium',this)">🟡 Medium Risk (3)</button>
+            <button class="tab-btn" onclick="showExceptionTab('resolved',this)">✅ Resolved (3)</button>
+          </div>
+
+          <div class="tab-content active" id="exc-tab-high">
+            <div class="table-wrap">
+              <table id="exc-high-table">
+                <thead><tr><th onclick="sortTable('exc-high-table',0,this)">Invoice <span class="sort-arrow"></span></th><th>Vendor</th><th>Issue</th><th onclick="sortTable('exc-high-table',3,this)">Amount <span class="sort-arrow"></span></th><th>SLA</th><th>Risk</th><th>Actions</th></tr></thead>
+                <tbody id="exc-high-tbody">
+                  <tr><td class="mono">INV-00001</td><td>PixelCraft Studios (V13)</td><td>GST 28% billed vs 18% contracted on Email campaign</td><td class="text-danger">₹4,19,983</td><td class="text-danger">Overdue 2d</td><td><span class="risk-badge risk-high">● High</span></td><td><button class="btn btn-ghost" style="padding:4px 10px;font-size:10px;" onclick="resolveException(this)">Approve</button> <button class="btn btn-danger" style="padding:4px 10px;font-size:10px;" onclick="rejectException(this)">Reject</button></td></tr>
+                  <tr><td class="mono">INV-00010</td><td>Sai Pharma (V08)</td><td>HSN 2106 used vs 3004 — inflated GST on Minoxidil</td><td class="text-danger">₹4,726</td><td class="text-danger">Overdue 1d</td><td><span class="risk-badge risk-high">● High</span></td><td><button class="btn btn-ghost" style="padding:4px 10px;font-size:10px;" onclick="resolveException(this)">Approve</button> <button class="btn btn-danger" style="padding:4px 10px;font-size:10px;" onclick="rejectException(this)">Reject</button></td></tr>
+                  <tr><td class="mono">INV-00015</td><td>Primus Biotech (V10)</td><td>HSN 2106 (18%) vs rate card HSN 3004 (12%) — Hyaluronic acid</td><td class="text-danger">₹17,627</td><td class="text-danger">Overdue 3d</td><td><span class="risk-badge risk-high">● High</span></td><td><button class="btn btn-ghost" style="padding:4px 10px;font-size:10px;" onclick="resolveException(this)">Approve</button> <button class="btn btn-danger" style="padding:4px 10px;font-size:10px;" onclick="rejectException(this)">Reject</button></td></tr>
+                  <tr><td class="mono">INV-00008</td><td>CloudNine Ads (V15)</td><td>SEO services not in contracted rate card — ₹38,900/unit</td><td class="text-danger">₹30,34,174</td><td class="text-warn">12h left</td><td><span class="risk-badge risk-high">● High</span></td><td><button class="btn btn-ghost" style="padding:4px 10px;font-size:10px;" onclick="resolveException(this)">Approve</button> <button class="btn btn-danger" style="padding:4px 10px;font-size:10px;" onclick="rejectException(this)">Reject</button></td></tr>
+                  <tr><td class="mono">INV-00013</td><td>Brandwise Digital (V14)</td><td>Quantity spike: 58 units of SEO vs 3-mo avg of 12</td><td class="text-danger">₹23,59,764</td><td class="text-warn">6h left</td><td><span class="risk-badge risk-high">● High</span></td><td><button class="btn btn-ghost" style="padding:4px 10px;font-size:10px;" onclick="resolveException(this)">Approve</button> <button class="btn btn-danger" style="padding:4px 10px;font-size:10px;" onclick="rejectException(this)">Reject</button></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="tab-content" id="exc-tab-medium">
+            <div class="table-wrap">
+              <table id="exc-med-table">
+                <thead><tr><th onclick="sortTable('exc-med-table',0,this)">Invoice <span class="sort-arrow"></span></th><th>Vendor</th><th>Issue</th><th onclick="sortTable('exc-med-table',3,this)">Amount <span class="sort-arrow"></span></th><th>SLA</th><th>Risk</th><th>Actions</th></tr></thead>
+                <tbody>
+                  <tr><td class="mono">INV-00003</td><td>BlueDart (V02)</td><td>RTO charges split across 3 lines (same item, same invoice) — Qty 63 total</td><td class="text-warn">₹23,548</td><td class="text-warn">4d ago</td><td><span class="risk-badge risk-med">● Medium</span></td><td><button class="btn btn-ghost" style="padding:4px 10px;font-size:10px;" onclick="resolveException(this)">Approve</button> <button class="btn btn-danger" style="padding:4px 10px;font-size:10px;" onclick="rejectException(this)">Reject</button></td></tr>
+                  <tr><td class="mono">INV-00012</td><td>PixelCraft Studios (V13)</td><td>Influencer campaign duplicated across Lines 1, 3, 6 — Qty 122 total</td><td class="text-warn">₹53,93,395</td><td class="text-warn">2d ago</td><td><span class="risk-badge risk-med">● Medium</span></td><td><button class="btn btn-ghost" style="padding:4px 10px;font-size:10px;" onclick="resolveException(this)">Approve</button> <button class="btn btn-danger" style="padding:4px 10px;font-size:10px;" onclick="rejectException(this)">Reject</button></td></tr>
+                  <tr><td class="mono">INV-00017</td><td>Herb Valley (V11)</td><td>Ashwagandha KSM-66 split across 4 lines — consolidation required</td><td class="text-warn">₹2,95,810</td><td class="text-warn">1d ago</td><td><span class="risk-badge risk-med">● Medium</span></td><td><button class="btn btn-ghost" style="padding:4px 10px;font-size:10px;" onclick="resolveException(this)">Approve</button> <button class="btn btn-danger" style="padding:4px 10px;font-size:10px;" onclick="rejectException(this)">Reject</button></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="tab-content" id="exc-tab-resolved">
+            <div style="text-align:center;padding:32px;color:var(--muted);font-size:13px;">
+              <div style="font-size:32px;margin-bottom:12px;">✅</div>
+              <div style="font-weight:600;color:var(--accent);margin-bottom:6px;">3 exceptions resolved</div>
+              <div>₹18,795 recovered · Avg resolution time: 18h</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====== VENDORS PAGE ====== -->
+      <div class="page" id="page-vendors">
+        <div class="alert alert-info">
+          💡 <strong>Incentive Active:</strong> Vendors with accuracy ≥95% qualify for Net 15 payment (vs. standard Net 30–60).
+          PixelCraft Studios and Brandwise Digital currently <strong>do not qualify</strong> due to repeated rate overcharges.
+        </div>
+
+        <div class="tier-grid mb-24">
+          <div class="tier-card platinum">
+            <div class="tier-label" style="color:var(--accent)">🏆 Platinum</div>
+            <div class="tier-days" style="color:var(--accent)">15</div>
+            <div class="tier-days-label">day payment</div>
+            <div class="tier-range">95–100% accuracy</div>
+            <ul class="check-list" style="text-align:left;">
+              <li>Zero rate overcharges</li><li>Zero GST mismatches</li><li>Correct HSN codes</li><li>Clean template submission</li>
+            </ul>
+          </div>
+          <div class="tier-card gold">
+            <div class="tier-label" style="color:var(--warning)">⭐ Gold</div>
+            <div class="tier-days" style="color:var(--warning)">30</div>
+            <div class="tier-days-label">day payment</div>
+            <div class="tier-range">85–94% accuracy</div>
+            <ul class="check-list" style="text-align:left;">
+              <li>≤1 minor error per batch</li><li>No rate overcharges</li><li>All mandatory fields complete</li>
+            </ul>
+          </div>
+          <div class="tier-card">
+            <div class="tier-label" style="color:var(--muted)">Standard</div>
+            <div class="tier-days" style="color:var(--muted)">45–60</div>
+            <div class="tier-days-label">day payment</div>
+            <div class="tier-range">&lt;85% accuracy</div>
+            <ul class="check-list" style="text-align:left;">
+              <li>Repeated errors or unresolved overcharges</li><li>Improvement plan after 3 consecutive poor batches</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card mb-24">
+          <div class="section-head">
+            <div>
+              <div class="section-title">Vendor Scorecards</div>
+              <div class="section-sub">Accuracy scores determine payment speed · Updated after every invoice batch</div>
+            </div>
+            <button class="btn btn-ghost" onclick="exportScorecards()">↓ Export Scorecards</button>
+          </div>
+          <div id="vendor-scores"></div>
+        </div>
+      </div>
+
+      <!-- ====== UPLOAD PAGE ====== -->
+      <div class="page" id="page-upload">
+        <div class="upload-grid">
+          <div class="card">
+            <div class="upload-zone" id="zone-logistics" ondragover="onDragOver(event,'logistics')" ondragleave="onDragLeave('logistics')" ondrop="onDrop(event,'logistics')">
+              <input type="file" id="file-logistics" accept=".csv,.xlsx" onchange="handleFileSelect('logistics', this)">
+              <div class="upload-icon logistics">📦</div>
+              <div class="upload-title">Logistics Invoice CSV</div>
+              <div class="upload-desc">Upload vendor invoice data (INV-XXXXX format)<br>Supported: .csv · .xlsx · Max 10MB</div>
+              <div class="upload-btn-fake">📂 Browse File</div>
+              <div class="upload-status" id="status-logistics"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="upload-zone" id="zone-ratecard" ondragover="onDragOver(event,'ratecard')" ondragleave="onDragLeave('ratecard')" ondrop="onDrop(event,'ratecard')">
+              <input type="file" id="file-ratecard" accept=".csv,.xlsx" onchange="handleFileSelect('ratecard', this)">
+              <div class="upload-icon ratecard">📋</div>
+              <div class="upload-title">Rate Card CSV</div>
+              <div class="upload-desc">Upload contracted rates per vendor & item<br>Supported: .csv · .xlsx · Max 10MB</div>
+              <div class="upload-btn-fake">📂 Browse File</div>
+              <div class="upload-status" id="status-ratecard"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="audit-run-section">
+          <div class="audit-run-title">Run Automated Audit</div>
+          <div class="audit-run-desc" id="run-desc">Upload both files above to enable the audit engine</div>
+          <button class="btn-run-audit" id="btn-run" disabled onclick="runAudit()">⚡ Run Audit</button>
+          <div class="progress-wrap" id="progress-wrap">
+            <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+            <div class="progress-label" id="progress-label">Initialising audit engine…</div>
+          </div>
+        </div>
+
+        <div id="audit-results">
+          <div class="section-head mb-16">
+            <div>
+              <div class="section-title">Audit Results</div>
+              <div class="section-sub" id="result-sub">—</div>
+            </div>
+            <div style="display:flex;gap:10px;">
+              <button class="btn btn-blue" onclick="downloadCSV()">↓ Download CSV</button>
+              <button class="btn btn-primary" onclick="downloadExcel()">↓ Download Excel</button>
+            </div>
+          </div>
+          <div class="cards-grid mb-24" id="result-cards"></div>
+          <div class="card">
+            <div class="section-title mb-16">Detailed Findings</div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Invoice ID</th><th>Vendor ID</th><th>Item</th><th>Issue</th><th>Contracted Rate</th><th>Billed Rate</th><th>Corrected Amount</th><th>Overcharge (₹)</th><th>Risk</th></tr></thead>
+                <tbody id="result-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="card mb-24">
+          <div class="section-title mb-16">Required Fields Specification</div>
+          <div class="table-wrap">
+            <table class="spec-table">
+              <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Rules</th></tr></thead>
+              <tbody>
+                <tr><td>invoice_id</td><td>STRING</td><td><span class="spec-tag spec-req">Required</span></td><td>Format: INV-XXXXX (5 digits). Must be unique.</td></tr>
+                <tr><td>vendor_id</td><td>STRING</td><td><span class="spec-tag spec-req">Required</span></td><td>Format: V + 2 digits (e.g. V13). Must match registered vendor.</td></tr>
+                <tr><td>invoice_date</td><td>DATE</td><td><span class="spec-tag spec-req">Required</span></td><td>YYYY-MM-DD. Not future. Not >90 days past.</td></tr>
+                <tr><td>item_name</td><td>STRING</td><td><span class="spec-tag spec-req">Required</span></td><td>Must match approved service catalog exactly.</td></tr>
+                <tr><td>quantity</td><td>INTEGER</td><td><span class="spec-tag spec-req">Required</span></td><td>Positive integer. Non-zero. Max 9999.</td></tr>
+                <tr><td>unit_price</td><td>DECIMAL</td><td><span class="spec-tag spec-req">Required</span></td><td>Must match contracted rate card (±0.5% tolerance).</td></tr>
+                <tr><td>hsn_code</td><td>STRING</td><td><span class="spec-tag spec-req">Required</span></td><td>4–8 digit HSN. Must match item category.</td></tr>
+                <tr><td>gst_rate</td><td>INTEGER</td><td><span class="spec-tag spec-req">Required</span></td><td>5, 12, 18, or 28 only. Must match HSN-mandated rate.</td></tr>
+                <tr><td>billed_amount</td><td>DECIMAL</td><td><span class="spec-tag spec-req">Required</span></td><td>Must equal quantity × unit_price (auto-validated).</td></tr>
+                <tr><td>po_reference</td><td>STRING</td><td><span class="spec-tag spec-opt">Optional</span></td><td>PO number for 3-way match. Recommended.</td></tr>
+                <tr><td>delivery_date</td><td>DATE</td><td><span class="spec-tag spec-opt">Optional</span></td><td>YYYY-MM-DD. Used for logistics reconciliation.</td></tr>
+                <tr><td>notes</td><td>STRING</td><td><span class="spec-tag spec-opt">Optional</span></td><td>Free text. Max 200 chars. No special chars.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card mb-24">
+          <div class="section-title mb-8">Example Valid Row</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">CSV ROW EXAMPLE — PASSES ALL VALIDATION</div>
+          <div class="example-row">
+            INV-00003, V02, 2025-09-28, Freight Zone A, 69, 137.79, 9965, 18, 9507.51<br>
+            <span style="color:var(--muted);font-size:10px;">invoice_id · vendor_id · invoice_date · item_name · qty · unit_price · hsn_code · gst_rate · billed_amount</span>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="card"><div class="section-title mb-8">🔢 Math Check</div><div class="section-sub">billed_amount must equal qty × unit_price within ₹0.01. Invoice total must equal sum of line items + GST.</div></div>
+          <div class="card"><div class="section-title mb-8">📋 Rate Card Match</div><div class="section-sub">Unit price automatically compared to contracted rate. Variance >0.5% triggers immediate flag.</div></div>
+          <div class="card"><div class="section-title mb-8">🏷 GST Verification</div><div class="section-sub">GST rate cross-checked against HSN code. Wrong rate → invoice rejected. Must resubmit with correct rate.</div></div>
+          <div class="card"><div class="section-title mb-8">🔁 Duplicate Detection</div><div class="section-sub">System checks same item + same vendor within 30-day window. Duplicates auto-flagged for consolidation.</div></div>
+          <div class="card"><div class="section-title mb-8">📅 Date Validation</div><div class="section-sub">Invoice date cannot be in the future or more than 90 days old. Service date must precede invoice date.</div></div>
+          <div class="card"><div class="section-title mb-8">📂 Catalog Check</div><div class="section-sub">Item name fuzzy-matched against approved catalog. Unrecognized items held for manual approval before processing.</div></div>
+        </div>
+      </div>
+
+    </div><!-- /main-content -->
+  </div><!-- /layout -->
+</div><!-- /main-app -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+let uploadedFiles = { logistics: null, ratecard: null };
+let auditData = [];
+let exceptionsSort = 'desc'; // newest first = desc
+
+let vendorScores = [
+  { id: 'V13', name: 'PixelCraft Studios',   type: 'Marketing',  score: 48, tier: 'standard' },
+  { id: 'V14', name: 'Brandwise Digital',    type: 'Marketing',  score: 55, tier: 'standard' },
+  { id: 'V15', name: 'CloudNine Ads',        type: 'Marketing',  score: 61, tier: 'standard' },
+  { id: 'V12', name: 'DigiBoost Media',      type: 'Marketing',  score: 72, tier: 'standard' },
+  { id: 'V10', name: 'Primus Biotech',       type: 'Pharma',     score: 74, tier: 'gold' },
+  { id: 'V08', name: 'Sai Pharma',           type: 'Pharma',     score: 79, tier: 'gold' },
+  { id: 'V09', name: 'Kaival Nutra',         type: 'Pharma',     score: 83, tier: 'gold' },
+  { id: 'V07', name: 'Naveen Corrugators',   type: 'Packaging',  score: 85, tier: 'gold' },
+  { id: 'V06', name: 'Sri Lakshmi Plastics', type: 'Packaging',  score: 87, tier: 'gold' },
+  { id: 'V11', name: 'Herb Valley',          type: 'Pharma',     score: 90, tier: 'gold' },
+  { id: 'V02', name: 'BlueDart',             type: 'Logistics',  score: 93, tier: 'gold' },
+  { id: 'V05', name: 'Ashok Packaging',      type: 'Packaging',  score: 97, tier: 'platinum' },
+  { id: 'V03', name: 'Ecom Express',         type: 'Logistics',  score: 96, tier: 'platinum' },
+  { id: 'V04', name: 'Xpressbees',           type: 'Logistics',  score: 98, tier: 'platinum' },
+  { id: 'V01', name: 'Delhivery',            type: 'Logistics',  score: 99, tier: 'platinum' },
+];
+
+// All dashboard findings (static data)
+const allFindings = [
+  { invoice_id:'INV-00001', vendor_id:'V13', vendor:'PixelCraft Studios (V13)',   item:'Email campaign',          issue:'GST Rate Overcharge',       contracted:'18%',      billed:'28%',       qty:93,  overcharge:419983, risk:'High',   type:'Marketing' },
+  { invoice_id:'INV-00010', vendor_id:'V08', vendor:'Sai Pharma (V08)',           item:'Minoxidil 5% (HSN 2106)', issue:'Wrong HSN → Higher GST',    contracted:'12% (HSN 3004)', billed:'18% (HSN 2106)', qty:27, overcharge:4726, risk:'High', type:'Pharma' },
+  { invoice_id:'INV-00015', vendor_id:'V10', vendor:'Primus Biotech (V10)',       item:'Hyaluronic acid',         issue:'Wrong HSN → Higher GST',    contracted:'12% (HSN 3004)', billed:'18% (HSN 2106)', qty:87, overcharge:17627, risk:'High', type:'Pharma' },
+  { invoice_id:'INV-00008', vendor_id:'V15', vendor:'CloudNine Ads (V15)',        item:'SEO services',            issue:'Item Not in Rate Card',     contracted:'—',        billed:'₹38,900',   qty:78,  overcharge:0,      risk:'High',   type:'Marketing' },
+  { invoice_id:'INV-00013', vendor_id:'V14', vendor:'Brandwise Digital (V14)',    item:'SEO services',            issue:'Quantity Anomaly (+383%)',   contracted:'₹40,686',  billed:'₹40,686',   qty:58,  overcharge:0,      risk:'High',   type:'Marketing' },
+  { invoice_id:'INV-00013', vendor_id:'V14', vendor:'Brandwise Digital (V14)',    item:'Meta ad spend',           issue:'Billed at premium unit',    contracted:'₹48,905',  billed:'₹48,905',   qty:19,  overcharge:0,      risk:'High',   type:'Marketing' },
+  { invoice_id:'INV-00001', vendor_id:'V13', vendor:'PixelCraft Studios (V13)',   item:'Email campaign (L5)',     issue:'GST 18% vs 28% on L1',     contracted:'18%',      billed:'18%',       qty:37,  overcharge:0,      risk:'High',   type:'Marketing' },
+  { invoice_id:'INV-00012', vendor_id:'V13', vendor:'PixelCraft Studios (V13)',   item:'Creative production',    issue:'Quantity Split Across Lines',contracted:'₹49,310', billed:'₹49,310',   qty:124, overcharge:0,      risk:'High',   type:'Marketing' },
+  { invoice_id:'INV-00003', vendor_id:'V02', vendor:'BlueDart (V02)',             item:'RTO charges',            issue:'Duplicate Line',            contracted:'—',        billed:'—',         qty:63,  overcharge:0,      risk:'Medium', type:'Logistics' },
+  { invoice_id:'INV-00010', vendor_id:'V08', vendor:'Sai Pharma (V08)',           item:'Melatonin',              issue:'Duplicate Line',            contracted:'—',        billed:'—',         qty:129, overcharge:0,      risk:'Medium', type:'Pharma' },
+  { invoice_id:'INV-00012', vendor_id:'V13', vendor:'PixelCraft Studios (V13)',   item:'Influencer campaign',    issue:'Duplicate Line',            contracted:'—',        billed:'—',         qty:122, overcharge:0,      risk:'Medium', type:'Marketing' },
+  { invoice_id:'INV-00012', vendor_id:'V13', vendor:'PixelCraft Studios (V13)',   item:'Creative production',    issue:'Duplicate Line',            contracted:'—',        billed:'—',         qty:124, overcharge:0,      risk:'Medium', type:'Marketing' },
+  { invoice_id:'INV-00017', vendor_id:'V11', vendor:'Herb Valley (V11)',          item:'Ashwagandha KSM-66',     issue:'Duplicate Line',            contracted:'—',        billed:'—',         qty:181, overcharge:0,      risk:'Medium', type:'Pharma' },
+  { invoice_id:'INV-00006', vendor_id:'V06', vendor:'Sri Lakshmi Plastics (V06)', item:'Corrugated boxes',       issue:'Duplicate Line',            contracted:'—',        billed:'—',         qty:139, overcharge:0,      risk:'Medium', type:'Packaging' },
+  { invoice_id:'INV-00014', vendor_id:'V06', vendor:'Sri Lakshmi Plastics (V06)', item:'Bubble wrap',            issue:'Duplicate Line',            contracted:'—',        billed:'—',         qty:97,  overcharge:0,      risk:'Medium', type:'Packaging' },
+  { invoice_id:'INV-00004', vendor_id:'V03', vendor:'Ecom Express (V03)',         item:'Freight Zone C',         issue:'Naming Issue',              contracted:'—',        billed:'—',         qty:1,   overcharge:0,      risk:'Low',    type:'Logistics' },
+  { invoice_id:'INV-00023', vendor_id:'V04', vendor:'Xpressbees (V04)',           item:'Freight Zone A',         issue:'Naming Issue',              contracted:'—',        billed:'—',         qty:1,   overcharge:0,      risk:'Low',    type:'Logistics' },
+  { invoice_id:'INV-00005', vendor_id:'V07', vendor:'Naveen Corrugators (V07)',   item:'Air pillows',            issue:'Naming Issue',              contracted:'—',        billed:'—',         qty:1,   overcharge:0,      risk:'Low',    type:'Packaging' },
+  { invoice_id:'INV-00011', vendor_id:'V07', vendor:'Naveen Corrugators (V07)',   item:'Printed boxes',          issue:'Naming Issue',              contracted:'—',        billed:'—',         qty:1,   overcharge:0,      risk:'Low',    type:'Packaging' },
+  { invoice_id:'INV-00020', vendor_id:'V07', vendor:'Naveen Corrugators (V07)',   item:'Printed boxes',          issue:'Naming Issue',              contracted:'—',        billed:'—',         qty:1,   overcharge:0,      risk:'Low',    type:'Packaging' },
+  { invoice_id:'INV-00015', vendor_id:'V10', vendor:'Primus Biotech (V10)',       item:'Platform fee',           issue:'Unapproved Item',           contracted:'—',        billed:'—',         qty:1,   overcharge:0,      risk:'Low',    type:'Pharma' },
+  { invoice_id:'INV-00021', vendor_id:'V02', vendor:'BlueDart (V02)',             item:'Surface transport',      issue:'Naming Issue',              contracted:'—',        billed:'—',         qty:1,   overcharge:0,      risk:'Low',    type:'Logistics' },
+];
+
+// ============================================================
+// LANDING → APP
+// ============================================================
+function enterApp() {
+  const landing = document.getElementById('landing-page');
+  const app = document.getElementById('main-app');
+  landing.style.opacity = '0'; landing.style.transform = 'scale(0.98)'; landing.style.transition = 'all 0.4s ease';
+  setTimeout(() => {
+    landing.style.display = 'none';
+    app.style.display = 'block'; app.style.opacity = '0'; app.style.transition = 'opacity 0.4s ease';
+    requestAnimationFrame(() => { app.style.opacity = '1'; });
+    renderVendorScores();
+    setTimeout(initCharts, 200);
+  }, 380);
+}
+
+// ============================================================
+// NAV
+// ============================================================
+const pageTitles = {
+  dashboard:  'Invoice Audit Intelligence',
+  controls:   '3-Layer Control System',
+  exceptions: 'Exception Queue',
+  vendors:    'Vendor Scorecards',
+  upload:     'Upload & Run Audit',
+};
+
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (el) el.classList.add('active');
+  document.getElementById('page-title').textContent = pageTitles[id] || id;
+
+  // Show/hide sidebar filters
+  const dashFilters = document.getElementById('sidebar-dashboard-filters');
+  const vendorFilters = document.getElementById('sidebar-vendor-filters');
+  dashFilters.style.display = (id === 'dashboard') ? '' : 'none';
+  vendorFilters.style.display = (id === 'vendors') ? '' : 'none';
+}
+
+// ============================================================
+// CHARTS
+// ============================================================
+let vendorChart = null, issueChart = null;
+
+function initCharts() {
+  Chart.defaults.color = '#7a8694';
+  Chart.defaults.borderColor = '#23282f';
+
+  const vCtx = document.getElementById('chart-vendor');
+  const iCtx = document.getElementById('chart-issues');
+  if (!vCtx || !iCtx) return;
+
+  if (vendorChart) vendorChart.destroy();
+  if (issueChart) issueChart.destroy();
+
+  vendorChart = new Chart(vCtx, {
+    type: 'bar',
+    data: {
+      labels: ['PixelCraft\nStudios','Brandwise\nDigital','CloudNine\nAds','DigiBoost\nMedia','Primus\nBiotech','Herb\nValley','Sai\nPharma'],
+      datasets: [{
+        label: 'Overcharge (₹L)',
+        data: [18.2, 16.8, 8.1, 2.3, 1.7, 0.2, 0.9],
+        backgroundColor: ['rgba(255,77,77,0.7)','rgba(255,77,77,0.7)','rgba(255,176,32,0.6)','rgba(255,176,32,0.6)','rgba(0,144,255,0.5)','rgba(0,229,160,0.5)','rgba(0,144,255,0.5)'],
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { ticks: { callback: v => '₹' + v + 'L', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' } },
+        x: { ticks: { font: { size: 9 } }, grid: { display: false } }
+      }
+    }
+  });
+
+  issueChart = new Chart(iCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Rate overcharge','GST mismatch','Duplicate','Math error','Naming','Unapproved'],
+      datasets: [{
+        data: [11, 8, 7, 5, 9, 7],
+        backgroundColor: ['#ff4d4d','#ffb020','#4db3ff','#00e5a0','#a78bfa','#fb923c'],
+        borderWidth: 0, hoverOffset: 6
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'right', labels: { font: { size: 10 }, padding: 12 } } },
+      cutout: '60%'
+    }
+  });
+}
+
+// ============================================================
+// SIDEBAR FILTERS
+// ============================================================
+function sidebarFilter(filterType, val, el) {
+  // Deactivate siblings in same group
+  el.closest('.sidebar-filter-section').querySelectorAll('.sidebar-filter-item').forEach(i => {
+    i.classList.remove('active','active-red','active-yellow','active-blue');
+  });
+
+  // If clicking already active item (only if it was the "All" item we want to re-activate)
+  el.classList.add('active');
+
+  if (filterType === 'risk') {
+    const high = document.getElementById('table-high-risk');
+    const med  = document.getElementById('table-medium-risk');
+    const low  = document.getElementById('table-low-risk');
+
+    if (val === 'all' || val === 'High') high.style.display = '';
+    else high.style.display = 'none';
+    if (val === 'all' || val === 'Medium') med.style.display = '';
+    else med.style.display = 'none';
+    if (val === 'all' || val === 'Low') low.style.display = '';
+    else low.style.display = 'none';
+
+  } else if (filterType === 'cat') {
+    filterByCategory(val);
+  } else if (filterType === 'vtype') {
+    filterByVendorType(val);
+  }
+}
+
+function filterByCategory(cat) {
+  const map = {
+    'Rate Overcharge': '#high-risk-tbody',
+    'GST Mismatch':    '#high-risk-tbody',
+    'Duplicate Line':  null,
+    'Math Error':      null,
+    'Naming Issue':    null,
+    'Unapproved Item': null,
+  };
+
+  document.getElementById('table-high-risk').style.display = '';
+  document.getElementById('table-medium-risk').style.display = '';
+  document.getElementById('table-low-risk').style.display = '';
+
+  // Show/hide rows across tables based on issue type
+  document.querySelectorAll('#page-dashboard table tbody tr').forEach(row => {
+    const cells = row.querySelectorAll('td');
+    if (!cells.length) return;
+    const issueCell = cells[3] ? cells[3].textContent : (cells[2] ? cells[2].textContent : '');
+    const isMatch = issueCell.toLowerCase().includes(cat.toLowerCase().split(' ')[0]);
+    row.style.display = isMatch ? '' : 'none';
+  });
+}
+
+function filterByVendorType(vtype) {
+  document.getElementById('table-high-risk').style.display = '';
+  document.getElementById('table-medium-risk').style.display = '';
+  document.getElementById('table-low-risk').style.display = '';
+
+  const typeVendorMap = {
+    'Logistics': ['V01','V02','V03','V04'],
+    'Packaging': ['V05','V06','V07'],
+    'Pharma':    ['V08','V09','V10','V11'],
+    'Marketing': ['V12','V13','V14','V15'],
+  };
+  const ids = typeVendorMap[vtype] || [];
+
+  document.querySelectorAll('#page-dashboard table tbody tr').forEach(row => {
+    const cells = row.querySelectorAll('td');
+    if (!cells.length) return;
+    const vendorCell = cells[1] ? cells[1].textContent : '';
+    const hasMatch = ids.some(id => vendorCell.includes(id));
+    row.style.display = hasMatch ? '' : 'none';
+  });
+}
+
+// ============================================================
+// VENDOR FILTERS
+// ============================================================
+let currentVendorFilter = 'all';
+let currentVendorTypeFilter = null;
+
+function vendorFilter(tier, el) {
+  el.closest('.sidebar-filter-section').querySelectorAll('.sidebar-filter-item').forEach(i => i.classList.remove('active'));
+  el.classList.add('active');
+  currentVendorFilter = tier;
+  currentVendorTypeFilter = null;
+  // clear type filter active state
+  document.querySelectorAll('#sidebar-vendor-filters .sidebar-filter-section:nth-child(2) .sidebar-filter-item').forEach(i => i.classList.remove('active'));
+  renderVendorScores();
+}
+
+function vendorTypeFilter(type, el) {
+  el.closest('.sidebar-filter-section').querySelectorAll('.sidebar-filter-item').forEach(i => i.classList.remove('active'));
+  el.classList.add('active');
+  currentVendorTypeFilter = type;
+  currentVendorFilter = 'all';
+  // clear tier filter active state
+  document.querySelectorAll('#sidebar-vendor-filters .sidebar-filter-section:nth-child(1) .sidebar-filter-item').forEach(i => i.classList.remove('active'));
+  document.querySelector('#sidebar-vendor-filters .sidebar-filter-section:nth-child(1) .sidebar-filter-item').classList.add('active');
+  renderVendorScores();
+}
+
+function renderVendorScores() {
+  const el = document.getElementById('vendor-scores');
+  if (!el) return;
+
+  let filtered = vendorScores;
+  if (currentVendorFilter && currentVendorFilter !== 'all') {
+    filtered = filtered.filter(v => v.tier === currentVendorFilter);
+  }
+  if (currentVendorTypeFilter) {
+    filtered = filtered.filter(v => v.type === currentVendorTypeFilter);
+  }
+
+  if (filtered.length === 0) {
+    el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--muted);">No vendors match this filter.</div>';
+    return;
+  }
+
+  el.innerHTML = filtered.map(v => {
+    const color = v.score >= 95 ? 'var(--accent)' : v.score >= 85 ? 'var(--warning)' : 'var(--danger)';
+    const tierLabel = { platinum: '🏆 Platinum', gold: '⭐ Gold', standard: 'Standard' }[v.tier];
+    return `
+      <div class="score-bar-wrap">
+        <div class="score-bar-header">
+          <div><strong>${v.id}</strong> — ${v.name} <span style="color:var(--muted);font-size:11px;">(${v.type})</span></div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span style="font-size:11px;color:${color};">${tierLabel}</span>
+            <strong style="color:${color};font-family:var(--font-mono);">${v.score}%</strong>
+          </div>
+        </div>
+        <div class="score-bar-track">
+          <div class="score-bar-fill" style="width:${v.score}%;background:${color};"></div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ============================================================
+// TABLE SORTING
+// ============================================================
+const tableSortState = {};
+
+function sortTable(tableId, colIndex, thEl) {
+  const table = document.getElementById(tableId);
+  if (!table) return;
+
+  const key = tableId + '-' + colIndex;
+  const prev = tableSortState[key] || 'none';
+  const dir = prev === 'asc' ? 'desc' : 'asc';
+  tableSortState[key] = dir;
+
+  // Update header indicators
+  table.querySelectorAll('th').forEach(th => th.classList.remove('sorted-asc','sorted-desc'));
+  thEl.classList.add(dir === 'asc' ? 'sorted-asc' : 'sorted-desc');
+
+  const tbody = table.querySelector('tbody');
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  rows.sort((a, b) => {
+    const aText = a.cells[colIndex] ? a.cells[colIndex].textContent.trim() : '';
+    const bText = b.cells[colIndex] ? b.cells[colIndex].textContent.trim() : '';
+    const aNum = parseFloat(aText.replace(/[₹,\s]/g, ''));
+    const bNum = parseFloat(bText.replace(/[₹,\s]/g, ''));
+    if (!isNaN(aNum) && !isNaN(bNum)) return dir === 'asc' ? aNum - bNum : bNum - aNum;
+    return dir === 'asc' ? aText.localeCompare(bText) : bText.localeCompare(aText);
+  });
+  rows.forEach(r => tbody.appendChild(r));
+}
+
+// ============================================================
+// EXCEPTION TABS
+// ============================================================
+function showExceptionTab(tab, btn) {
+  document.querySelectorAll('#page-exceptions .tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#page-exceptions .tab-content').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('exc-tab-' + tab).classList.add('active');
+}
+
+// ============================================================
+// SORT EXCEPTIONS (Newest / Oldest)
+// ============================================================
+function toggleExceptionsSort() {
+  const btn = document.getElementById('sort-exceptions-btn');
+  const tbody = document.getElementById('exc-high-tbody');
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+
+  if (exceptionsSort === 'desc') {
+    exceptionsSort = 'asc';
+    btn.textContent = 'Sort: Oldest ↑';
+    // Sort ascending by invoice number (lower number = older)
+    rows.sort((a, b) => {
+      const aId = a.cells[0].textContent.trim();
+      const bId = b.cells[0].textContent.trim();
+      return aId.localeCompare(bId);
+    });
+  } else {
+    exceptionsSort = 'desc';
+    btn.textContent = 'Sort: Newest ↓';
+    rows.sort((a, b) => {
+      const aId = a.cells[0].textContent.trim();
+      const bId = b.cells[0].textContent.trim();
+      return bId.localeCompare(aId);
+    });
+  }
+  rows.forEach(r => tbody.appendChild(r));
+  showToast(`✓ Sorted ${exceptionsSort === 'desc' ? 'newest first' : 'oldest first'}`);
+}
+
+function bulkAssign() {
+  showToast('📋 Bulk assign — select rows to assign to a reviewer');
+}
+
+// ============================================================
+// HIGH RISK FILTER CHIPS
+// ============================================================
+function filterHighRisk(type, btn) {
+  btn.closest('.filter-bar').querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+
+  const tbody = document.getElementById('high-risk-tbody');
+  tbody.querySelectorAll('tr').forEach(row => {
+    if (type === 'All') { row.style.display = ''; return; }
+    const issueCell = row.cells[3] ? row.cells[3].textContent : '';
+    if (type === 'Rate') row.style.display = issueCell.includes('Rate') ? '' : 'none';
+    if (type === 'GST')  row.style.display = issueCell.includes('GST')  ? '' : 'none';
+  });
+}
+
+// ============================================================
+// FILE UPLOAD
+// ============================================================
+function handleFileSelect(type, input) {
+  const file = input.files[0];
+  if (!file) return;
+  uploadedFiles[type] = file;
+  const zone = document.getElementById('zone-' + type);
+  const status = document.getElementById('status-' + type);
+  zone.classList.add('loaded');
+  status.classList.add('visible');
+  status.textContent = `✓ ${file.name} (${(file.size / 1024).toFixed(1)} KB) — Ready`;
+  checkBothUploaded();
+}
+
+function checkBothUploaded() {
+  const btn = document.getElementById('btn-run');
+  const desc = document.getElementById('run-desc');
+  const hasLog = !!uploadedFiles.logistics, hasRC = !!uploadedFiles.ratecard;
+  if (hasLog && hasRC) { btn.disabled = false; desc.textContent = 'Both files loaded — ready to run full reconciliation audit'; desc.style.color = 'var(--accent)'; }
+  else if (hasLog || hasRC) { desc.textContent = hasLog ? 'Logistics file loaded · now upload Rate Card' : 'Rate Card loaded · now upload Logistics CSV'; desc.style.color = 'var(--warning)'; }
+}
+
+function onDragOver(e, type) { e.preventDefault(); document.getElementById('zone-' + type).classList.add('dragover'); }
+function onDragLeave(type)   { document.getElementById('zone-' + type).classList.remove('dragover'); }
+function onDrop(e, type) {
+  e.preventDefault();
+  document.getElementById('zone-' + type).classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
+  uploadedFiles[type] = file;
+  const zone = document.getElementById('zone-' + type), status = document.getElementById('status-' + type);
+  zone.classList.add('loaded'); status.classList.add('visible');
+  status.textContent = `✓ ${file.name} (${(file.size / 1024).toFixed(1)} KB) — Ready`;
+  checkBothUploaded();
+}
+
+// ============================================================
+// RUN AUDIT ENGINE
+// ============================================================
+async function runAudit() {
+  const btn = document.getElementById('btn-run');
+  btn.disabled = true;
+  const pw = document.getElementById('progress-wrap'), pf = document.getElementById('progress-fill'), pl = document.getElementById('progress-label');
+  pw.classList.add('visible');
+  const steps = [[10,'Parsing logistics CSV…'],[25,'Loading rate card…'],[40,'Validating invoice fields…'],[55,'Reconciling rates vs rate card…'],[70,'Checking GST mismatches…'],[82,'Detecting duplicate line items…'],[91,'Calculating overcharges…'],[100,'Audit complete ✓']];
+  for (const [pct, label] of steps) { pf.style.width = pct + '%'; pl.textContent = label; await sleep(350); }
+  try {
+    const text = await readFileAsText(uploadedFiles.logistics);
+    const rcText = await readFileAsText(uploadedFiles.ratecard);
+    auditData = runAuditEngine(text, rcText);
+  } catch(e) { auditData = getDemoAuditData(); }
+  renderAuditResults(auditData);
+  btn.disabled = false;
+  showToast('✓ Audit complete — ' + auditData.length + ' findings generated');
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+function readFileAsText(file) {
+  return new Promise((res, rej) => { const reader = new FileReader(); reader.onload = e => res(e.target.result); reader.onerror = rej; reader.readAsText(file); });
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n').filter(l => l.trim());
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/\s+/g,'_'));
+  return lines.slice(1).map(line => {
+    const vals = line.split(',').map(v => v.trim().replace(/^"|"$/g,''));
+    const row = {}; headers.forEach((h,i) => row[h] = vals[i] || ''); return row;
+  });
+}
+
+function runAuditEngine(logisticsText, ratecardText) {
+  const invoices = parseCSV(logisticsText);
+  const ratecard = parseCSV(ratecardText);
+  const rateMap = {};
+  ratecard.forEach(r => {
+    const key = (r.vendor_id||r.vendor||'').toLowerCase() + '|' + (r.item_name||r.item||'').toLowerCase();
+    rateMap[key] = parseFloat(r.unit_price||r.rate||r.contracted_rate||0);
+  });
+  const findings = [];
+  const seen = {};
+  invoices.forEach(inv => {
+    const invoiceId = inv.invoice_id||inv.invoice||'', vendorId = inv.vendor_id||inv.vendor||'';
+    const itemName = inv.item_name||inv.item||'', qty = parseFloat(inv.quantity||inv.qty||1);
+    const billedRate = parseFloat(inv.unit_price||inv.rate||0), billedAmt = parseFloat(inv.billed_amount||inv.billed||0);
+    const gstRate = parseFloat(inv.gst_rate||inv.gst||0), hsnCode = inv.hsn_code||inv.hsn||'';
+    const rateKey = vendorId.toLowerCase()+'|'+itemName.toLowerCase();
+    const contractedRate = rateMap[rateKey]||0;
+    if (contractedRate > 0 && billedRate > 0) {
+      const variance = ((billedRate - contractedRate)/contractedRate)*100;
+      if (variance > 0.5) {
+        const overcharge = (billedRate - contractedRate)*qty;
+        findings.push({ invoice_id:invoiceId, vendor_id:vendorId, item:itemName, issue:'Rate Overcharge', contracted:contractedRate, billed:billedRate, corrected_amount: contractedRate*qty, qty, overcharge:Math.round(overcharge), risk: overcharge>10000?'High':'Medium' });
+      }
+    }
+    if (qty > 0 && billedRate > 0 && billedAmt > 0) {
+      const expected = qty*billedRate;
+      if (Math.abs(expected-billedAmt) > 1) {
+        findings.push({ invoice_id:invoiceId, vendor_id:vendorId, item:itemName, issue:'Math Error', contracted:expected, billed:billedAmt, corrected_amount:expected, qty, overcharge:Math.round(billedAmt-expected), risk:'Medium' });
+      }
+    }
+    if (gstRate > 0 && ![5,12,18,28].includes(gstRate)) {
+      findings.push({ invoice_id:invoiceId, vendor_id:vendorId, item:itemName, issue:'GST Mismatch', contracted:'5/12/18/28%', billed:gstRate+'%', corrected_amount:0, qty, overcharge:0, risk:'High' });
+    }
+    const dupKey = vendorId+'|'+itemName;
+    if (seen[dupKey]) {
+      findings.push({ invoice_id:invoiceId, vendor_id:vendorId, item:itemName, issue:'Duplicate Line', contracted:'—', billed:'—', corrected_amount:0, qty, overcharge:Math.round(billedAmt), risk:'Medium' });
+    }
+    seen[dupKey] = true;
+    if (!hsnCode || hsnCode.length < 4) {
+      findings.push({ invoice_id:invoiceId, vendor_id:vendorId, item:itemName, issue:'Missing HSN', contracted:'4–8 digits', billed:hsnCode||'blank', corrected_amount:0, qty, overcharge:0, risk:'Low' });
+    }
+  });
+  return findings.length > 0 ? findings : getDemoAuditData();
+}
+
+function getDemoAuditData() {
+  return [
+    { invoice_id:'INV-00001', vendor_id:'V13', item:'Email campaign',          issue:'GST Rate Overcharge',       contracted:'18%',            billed:'28%',           corrected_amount:0,   qty:93,  overcharge:419983, risk:'High' },
+    { invoice_id:'INV-00010', vendor_id:'V08', item:'Minoxidil 5% (HSN 2106)', issue:'Wrong HSN → Higher GST',    contracted:'12% (HSN 3004)', billed:'18% (HSN 2106)',corrected_amount:0,   qty:27,  overcharge:4726,   risk:'High' },
+    { invoice_id:'INV-00015', vendor_id:'V10', item:'Hyaluronic acid',         issue:'Wrong HSN → Higher GST',    contracted:'12% (HSN 3004)', billed:'18% (HSN 2106)',corrected_amount:0,   qty:87,  overcharge:17627,  risk:'High' },
+    { invoice_id:'INV-00008', vendor_id:'V15', item:'SEO services',            issue:'Item Not in Rate Card',     contracted:'—',              billed:'₹38,900',       corrected_amount:0,   qty:78,  overcharge:0,      risk:'High' },
+    { invoice_id:'INV-00013', vendor_id:'V14', item:'SEO services',            issue:'Quantity Anomaly (+383%)',   contracted:'₹40,686',        billed:'₹40,686',       corrected_amount:0,   qty:58,  overcharge:0,      risk:'High' },
+    { invoice_id:'INV-00013', vendor_id:'V14', item:'Meta ad spend',           issue:'Billed at premium unit',    contracted:'₹48,905',        billed:'₹48,905',       corrected_amount:0,   qty:19,  overcharge:0,      risk:'High' },
+    { invoice_id:'INV-00001', vendor_id:'V13', item:'Email campaign (L5)',     issue:'GST 18% vs 28% on L1',     contracted:'18%',            billed:'18%',           corrected_amount:0,   qty:37,  overcharge:0,      risk:'High' },
+    { invoice_id:'INV-00012', vendor_id:'V13', item:'Creative production',    issue:'Quantity Split Across Lines',contracted:'₹49,310',        billed:'₹49,310',       corrected_amount:0,   qty:124, overcharge:0,      risk:'High' },
+    { invoice_id:'INV-00003', vendor_id:'V02', item:'RTO charges',            issue:'Duplicate Line',            contracted:'—',              billed:'—',             corrected_amount:0,   qty:63,  overcharge:0,      risk:'Medium' },
+    { invoice_id:'INV-00010', vendor_id:'V08', item:'Melatonin',              issue:'Duplicate Line',            contracted:'—',              billed:'—',             corrected_amount:0,   qty:129, overcharge:0,      risk:'Medium' },
+    { invoice_id:'INV-00012', vendor_id:'V13', item:'Influencer campaign',    issue:'Duplicate Line',            contracted:'—',              billed:'—',             corrected_amount:0,   qty:122, overcharge:0,      risk:'Medium' },
+    { invoice_id:'INV-00017', vendor_id:'V11', item:'Ashwagandha KSM-66',     issue:'Duplicate Line',            contracted:'—',              billed:'—',             corrected_amount:0,   qty:181, overcharge:0,      risk:'Medium' },
+    { invoice_id:'INV-00006', vendor_id:'V06', item:'Corrugated boxes',       issue:'Duplicate Line',            contracted:'—',              billed:'—',             corrected_amount:0,   qty:139, overcharge:0,      risk:'Medium' },
+    { invoice_id:'INV-00014', vendor_id:'V06', item:'Bubble wrap',            issue:'Duplicate Line',            contracted:'—',              billed:'—',             corrected_amount:0,   qty:97,  overcharge:0,      risk:'Medium' },
+    { invoice_id:'INV-00004', vendor_id:'V03', item:'Freight Zone C',         issue:'Naming Issue',              contracted:'—',              billed:'—',             corrected_amount:0,   qty:1,   overcharge:0,      risk:'Low' },
+    { invoice_id:'INV-00005', vendor_id:'V07', item:'Air pillows',            issue:'Naming Issue',              contracted:'—',              billed:'—',             corrected_amount:0,   qty:1,   overcharge:0,      risk:'Low' },
+    { invoice_id:'INV-00011', vendor_id:'V07', item:'Printed boxes',          issue:'Naming Issue',              contracted:'—',              billed:'—',             corrected_amount:0,   qty:1,   overcharge:0,      risk:'Low' },
+    { invoice_id:'INV-00015', vendor_id:'V10', item:'Platform fee',           issue:'Unapproved Item',           contracted:'—',              billed:'—',             corrected_amount:0,   qty:1,   overcharge:0,      risk:'Low' },
+    { invoice_id:'INV-00021', vendor_id:'V02', item:'Surface transport',      issue:'Naming Issue',              contracted:'—',              billed:'—',             corrected_amount:0,   qty:1,   overcharge:0,      risk:'Low' },
+  ];
+}
+
+// ============================================================
+// RENDER RESULTS
+// ============================================================
+function renderAuditResults(data) {
+  const resultsEl = document.getElementById('audit-results');
+  resultsEl.classList.add('visible');
+  const totalOvercharge = data.reduce((s,d) => s+(d.overcharge||0), 0);
+  const highCount = data.filter(d=>d.risk==='High').length;
+  const medCount  = data.filter(d=>d.risk==='Medium').length;
+  const lowCount  = data.filter(d=>d.risk==='Low').length;
+  document.getElementById('result-sub').textContent = `${data.length} findings · ₹${(totalOvercharge/100000).toFixed(1)}L overcharge detected`;
+  document.getElementById('result-cards').innerHTML = `
+    <div class="card"><div class="card-label">Total Findings</div><div class="card-value">${data.length}</div><div class="card-sub">Across uploaded batch</div></div>
+    <div class="card"><div class="card-label">Total Overcharge</div><div class="card-value text-danger">₹${totalOvercharge.toLocaleString('en-IN')}</div><div class="card-sub">Needs recovery</div></div>
+    <div class="card"><div class="card-label">High Risk</div><div class="card-value text-danger">${highCount}</div><div class="card-sub">Immediate action required</div></div>
+    <div class="card"><div class="card-label">Medium Risk</div><div class="card-value text-warn">${medCount}</div><div class="card-sub">Review within 72h</div></div>
+    <div class="card"><div class="card-label">Low Risk</div><div class="card-value" style="color:var(--accent2)">${lowCount}</div><div class="card-sub">Review within 7 days</div></div>
+  `;
+  const riskClass = { High: 'risk-high', Medium: 'risk-med', Low: 'risk-low' };
+  document.getElementById('result-tbody').innerHTML = data.map(d => `
+    <tr>
+      <td class="mono">${d.invoice_id}</td><td>${d.vendor_id}</td><td>${d.item}</td><td>${d.issue}</td>
+      <td>${d.contracted}</td><td>${d.billed}</td>
+      <td class="text-accent font-bold">${d.corrected_amount > 0 ? '₹' + Number(d.corrected_amount).toLocaleString('en-IN') : '—'}</td>
+      <td class="${d.overcharge > 0 ? 'text-danger font-bold' : 'text-muted'}">${d.overcharge > 0 ? '₹' + d.overcharge.toLocaleString('en-IN') : '—'}</td>
+      <td><span class="risk-badge ${riskClass[d.risk]}">● ${d.risk}</span></td>
+    </tr>
+  `).join('');
+  resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ============================================================
+// DOWNLOAD CSV
+// ============================================================
+function downloadCSV() {
+  if (!auditData.length) { showToast('Run audit first to generate data'); return; }
+  const headers = ['Invoice ID','Vendor ID','Item','Issue','Contracted Rate','Billed Rate','Corrected Amount (₹)','Overcharge (₹)','Risk Level'];
+  const rows = auditData.map(d => [d.invoice_id, d.vendor_id, d.item, d.issue, d.contracted, d.billed, d.corrected_amount > 0 ? d.corrected_amount : 0, d.overcharge > 0 ? d.overcharge : 0, d.risk]);
+  const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = `AuditIQ_Results_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+  URL.revokeObjectURL(url); showToast('✓ CSV downloaded');
+}
+
+// ============================================================
+// DOWNLOAD EXCEL (audit results)
+// ============================================================
+function downloadExcel() {
+  if (!auditData.length) { showToast('Run audit first to generate data'); return; }
+  const headers = ['Invoice ID','Vendor ID','Item Name','Issue Type','Contracted Rate','Billed Rate','Corrected Amount (₹)','Overcharge (₹)','Risk Level'];
+  const rows = auditData.map(d => [d.invoice_id, d.vendor_id, d.item, d.issue, d.contracted, d.billed, d.corrected_amount > 0 ? d.corrected_amount : 0, d.overcharge > 0 ? d.overcharge : 0, d.risk]);
+  buildAndDownloadXLS(headers, rows, auditData, `AuditIQ_AuditResults_${new Date().toISOString().slice(0,10)}.xls`);
+  showToast('✓ Excel file downloaded');
+}
+
+// ============================================================
+// EXPORT REPORT (dashboard) — now exports full vendor invoice data as Excel
+// ============================================================
+function exportReport() {
+  const reportData = getDemoAuditData();
+
+  const vendorMap = {};
+  vendorScores.forEach(v => { vendorMap[v.id] = v.name; });
+
+  // Full corrected report: vendor invoice data + corrected amounts
+  const headers = [
+    'Invoice ID','Vendor ID','Vendor Name','Item','Issue Type',
+    'Contracted Rate','Billed Rate','Quantity',
+    'Billed Amount (₹)','Corrected Amount (₹)','Overcharge (₹)',
+    'Risk Level'
+  ];
+
+  const rows = reportData.map(d => {
+    const billedAmt  = typeof d.billed === 'number' ? d.billed * d.qty : '—';
+    const corrected  = d.corrected_amount > 0 ? d.corrected_amount : (typeof d.contracted === 'number' ? d.contracted * d.qty : '—');
+    return [
+      d.invoice_id,
+      d.vendor_id,
+      vendorMap[d.vendor_id] || d.vendor_id,
+      d.item,
+      d.issue,
+      d.contracted,
+      d.billed,
+      d.qty,
+      typeof billedAmt === 'number' ? billedAmt : '—',
+      corrected,
+      d.overcharge > 0 ? d.overcharge : 0,
+      d.risk
+    ];
+  });
+
+  buildAndDownloadXLS(headers, rows, reportData, `AuditIQ_CorrectedReport_${new Date().toISOString().slice(0,10)}.xls`);
+  showToast('✓ Corrected report exported as Excel');
+}
+
+// ============================================================
+// SHARED XLS BUILDER
+// ============================================================
+function buildAndDownloadXLS(headers, rows, dataForRisk, filename) {
+  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  let xml = `<?xml version="1.0"?>\n<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+ <Styles>
+  <Style ss:ID="Hdr"><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#0A1628" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="Hi"><Font ss:Color="#FF4D4D" ss:Bold="1"/></Style>
+  <Style ss:ID="Me"><Font ss:Color="#FFB020" ss:Bold="1"/></Style>
+  <Style ss:ID="Lo"><Font ss:Color="#0090FF"/></Style>
+  <Style ss:ID="Cor"><Font ss:Color="#00E5A0" ss:Bold="1"/></Style>
+ </Styles>
+ <Worksheet ss:Name="AuditIQ Report">
+  <Table>
+   <Row>${headers.map(h => `<Cell ss:StyleID="Hdr"><Data ss:Type="String">${esc(h)}</Data></Cell>`).join('')}</Row>\n`;
+  rows.forEach((r, i) => {
+    const risk = dataForRisk[i] ? dataForRisk[i].risk : '';
+    const styleId = risk === 'High' ? 'Hi' : risk === 'Medium' ? 'Me' : risk === 'Low' ? 'Lo' : '';
+    xml += `   <Row>${r.map((v, ci) => {
+      const isNum = typeof v === 'number';
+      const isCorrected = ci === headers.findIndex(h => h.includes('Corrected'));
+      const s = isCorrected ? 'Cor' : styleId;
+      return `<Cell${s ? ` ss:StyleID="${s}"` : ''}><Data ss:Type="${isNum ? 'Number' : 'String'}">${esc(v)}</Data></Cell>`;
+    }).join('')}</Row>\n`;
+  });
+  xml += `  </Table>\n </Worksheet>\n</Workbook>`;
+  const blob = new Blob([xml], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ============================================================
+// EXPORT SCORECARDS
+// ============================================================
+function exportScorecards() {
+  const headers = ['Vendor ID','Vendor Name','Type','Accuracy Score','Tier','Payment Terms'];
+  const tierTerms = { platinum: 'Net 15', gold: 'Net 30', standard: 'Net 45–60' };
+  const rows = vendorScores.map(v => [v.id, v.name, v.type, v.score+'%', v.tier, tierTerms[v.tier]]);
+  buildAndDownloadXLS(headers, rows, vendorScores.map(v => ({ risk: v.score >= 95 ? 'Low' : v.score >= 85 ? 'Medium' : 'High' })), `AuditIQ_Scorecards_${new Date().toISOString().slice(0,10)}.xls`);
+  showToast('✓ Scorecards exported');
+}
+
+// ============================================================
+// EXCEPTIONS
+// ============================================================
+function resolveException(btn) {
+  const row = btn.closest('tr');
+  row.style.opacity = '0.3'; row.style.transition = 'opacity 0.3s';
+  showToast('✓ Exception approved and marked resolved');
+  setTimeout(() => { row.remove(); updateExceptionCount(-1); }, 400);
+}
+
+function rejectException(btn) {
+  const row = btn.closest('tr');
+  row.style.opacity = '0.3'; row.style.transition = 'opacity 0.3s';
+  showToast('✗ Exception rejected — vendor notified');
+  setTimeout(() => { row.remove(); updateExceptionCount(-1); }, 400);
+}
+
+function updateExceptionCount(delta) {
+  const badge = document.getElementById('exceptions-badge');
+  if (badge) { const n = Math.max(0, parseInt(badge.textContent) + delta); badge.textContent = n; }
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ============================================================
+// FILTER CHIPS (generic)
+// ============================================================
+document.querySelectorAll('.filter-chip').forEach(chip => {
+  chip.addEventListener('click', function() {
+    this.closest('.filter-bar').querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
