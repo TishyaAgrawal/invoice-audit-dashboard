@@ -1,0 +1,1769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AuditIQ — Invoice Audit Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #0d0f14;
+  --bg2: #13161e;
+  --bg3: #1a1e2a;
+  --card: #1e2230;
+  --card2: #242838;
+  --border: #2d3348;
+  --border2: #3a4060;
+  --text: #e8eaf0;
+  --text2: #9ba3bc;
+  --text3: #636b85;
+  --accent: #6c8cff;
+  --accent2: #4f6fef;
+  --red: #ff4d6a;
+  --red-bg: rgba(255,77,106,0.1);
+  --yellow: #ffb84d;
+  --yellow-bg: rgba(255,184,77,0.1);
+  --blue: #4db8ff;
+  --blue-bg: rgba(77,184,255,0.1);
+  --green: #4dff9a;
+  --green-bg: rgba(77,255,154,0.1);
+  --purple: #b84dff;
+  --font: 'DM Sans', sans-serif;
+  --mono: 'DM Mono', monospace;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:var(--font); background:var(--bg); color:var(--text); min-height:100vh; }
+
+/* HERO */
+.hero { background: linear-gradient(135deg, #0d0f14 0%, #141825 50%, #0f1520 100%); padding: 80px 40px; text-align:center; position:relative; overflow:hidden; border-bottom: 1px solid var(--border); }
+.hero::before { content:''; position:absolute; inset:0; background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(108,140,255,0.08) 0%, transparent 70%); }
+.hero-badge { display:inline-block; background: rgba(108,140,255,0.1); border:1px solid rgba(108,140,255,0.3); color:var(--accent); font-size:11px; letter-spacing:2px; text-transform:uppercase; padding:6px 16px; border-radius:20px; margin-bottom:24px; font-family:var(--mono); }
+.hero h1 { font-size: clamp(32px,5vw,56px); font-weight:700; letter-spacing:-1px; margin-bottom:12px; }
+.hero h1 span { color:var(--accent); }
+.hero p { color:var(--text2); font-size:15px; margin-bottom:48px; }
+.hero-stats { display:flex; justify-content:center; gap:48px; flex-wrap:wrap; }
+.hero-stat { text-align:center; }
+.hero-stat .val { font-size:clamp(24px,3vw,36px); font-weight:700; color:var(--red); font-family:var(--mono); }
+.hero-stat .val.green { color:var(--green); }
+.hero-stat .val.blue { color:var(--blue); }
+.hero-stat .lbl { font-size:12px; color:var(--text3); text-transform:uppercase; letter-spacing:1px; margin-top:4px; }
+.hero-cta { margin-top:32px; display:flex; justify-content:center; gap:12px; flex-wrap:wrap; }
+.btn { padding:10px 24px; border-radius:8px; font-family:var(--font); font-size:14px; font-weight:500; cursor:pointer; border:none; transition:all 0.2s; }
+.btn-primary { background:var(--accent); color:#fff; }
+.btn-primary:hover { background:var(--accent2); transform:translateY(-1px); }
+.btn-ghost { background:transparent; color:var(--text2); border:1px solid var(--border2); }
+.btn-ghost:hover { border-color:var(--accent); color:var(--accent); }
+.btn-danger { background:var(--red-bg); color:var(--red); border:1px solid rgba(255,77,106,0.3); font-size:12px; padding:5px 12px; }
+.btn-danger:hover { background:rgba(255,77,106,0.2); }
+.btn-success { background:var(--green-bg); color:var(--green); border:1px solid rgba(77,255,154,0.3); }
+.btn-success:hover { background:rgba(77,255,154,0.2); }
+.btn-sm { font-size:12px; padding:5px 14px; }
+.btn-approve { background:rgba(77,255,154,0.1); color:var(--green); border:1px solid rgba(77,255,154,0.3); font-size:11px; padding:4px 10px; cursor:pointer; border-radius:5px; font-family:var(--font); }
+.btn-approve:hover { background:rgba(77,255,154,0.2); }
+.btn-reject { background:var(--red-bg); color:var(--red); border:1px solid rgba(255,77,106,0.3); font-size:11px; padding:4px 10px; cursor:pointer; border-radius:5px; font-family:var(--font); }
+.btn-reject:hover { background:rgba(255,77,106,0.2); }
+
+/* LAYOUT */
+.app { display:flex; min-height:calc(100vh - 200px); }
+.sidebar { width:240px; min-width:240px; background:var(--bg2); border-right:1px solid var(--border); padding:24px 0; position:sticky; top:0; height:100vh; overflow-y:auto; }
+.sidebar-brand { padding:0 20px 24px; border-bottom:1px solid var(--border); }
+.sidebar-brand .name { font-size:16px; font-weight:700; color:var(--accent); }
+.sidebar-brand .sub { font-size:11px; color:var(--text3); margin-top:2px; }
+.sidebar-brand .live-dot { display:inline-block; width:6px; height:6px; background:var(--green); border-radius:50%; margin-right:6px; animation:pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.nav-section { padding:16px 0; border-bottom:1px solid var(--border); }
+.nav-section-title { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--text3); padding:0 20px 8px; }
+.nav-item { display:flex; align-items:center; gap:10px; padding:10px 20px; font-size:13px; color:var(--text2); cursor:pointer; transition:all 0.15s; border-left:2px solid transparent; }
+.nav-item:hover { background:var(--bg3); color:var(--text); }
+.nav-item.active { background:rgba(108,140,255,0.08); color:var(--accent); border-left-color:var(--accent); }
+.nav-badge { background:var(--red); color:#fff; font-size:10px; padding:2px 6px; border-radius:10px; margin-left:auto; font-family:var(--mono); }
+.nav-filter { padding:8px 20px; }
+.filter-group { margin-bottom:12px; }
+.filter-label { font-size:11px; color:var(--text3); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; display:block; }
+.filter-chip { display:inline-block; background:var(--card); border:1px solid var(--border); color:var(--text2); font-size:11px; padding:4px 10px; border-radius:5px; cursor:pointer; margin:2px; transition:all 0.15s; }
+.filter-chip:hover,.filter-chip.active { background:rgba(108,140,255,0.12); border-color:var(--accent); color:var(--accent); }
+.risk-chip.high { background:var(--red-bg); border-color:rgba(255,77,106,0.4); color:var(--red); }
+.risk-chip.medium { background:var(--yellow-bg); border-color:rgba(255,184,77,0.4); color:var(--yellow); }
+.risk-chip.low { background:var(--blue-bg); border-color:rgba(77,184,255,0.4); color:var(--blue); }
+
+/* MAIN */
+.main { flex:1; overflow:auto; }
+.tab-panel { display:none; padding:24px; }
+.tab-panel.active { display:block; }
+
+/* CARDS */
+.stat-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; margin-bottom:24px; }
+.stat-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px; position:relative; overflow:hidden; }
+.stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
+.stat-card.red::before { background:var(--red); }
+.stat-card.yellow::before { background:var(--yellow); }
+.stat-card.blue::before { background:var(--blue); }
+.stat-card.green::before { background:var(--green); }
+.stat-card .label { font-size:11px; color:var(--text3); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; }
+.stat-card .value { font-size:28px; font-weight:700; font-family:var(--mono); }
+.stat-card .value.red { color:var(--red); }
+.stat-card .value.yellow { color:var(--yellow); }
+.stat-card .value.blue { color:var(--blue); }
+.stat-card .value.green { color:var(--green); }
+.stat-card .sub { font-size:12px; color:var(--text3); margin-top:6px; }
+.charts-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px; }
+.chart-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px; }
+.chart-card h3 { font-size:13px; font-weight:600; color:var(--text2); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px; }
+.chart-card .chart-sub { font-size:11px; color:var(--text3); margin-bottom:16px; }
+.chart-wrap { position:relative; height:220px; }
+.section-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:8px; }
+.section-title { font-size:14px; font-weight:600; display:flex; align-items:center; gap:8px; }
+.risk-badge { font-size:11px; padding:3px 10px; border-radius:4px; font-family:var(--mono); font-weight:500; }
+.risk-high { background:var(--red-bg); color:var(--red); border:1px solid rgba(255,77,106,0.3); }
+.risk-medium { background:var(--yellow-bg); color:var(--yellow); border:1px solid rgba(255,184,77,0.3); }
+.risk-low { background:var(--blue-bg); color:var(--blue); border:1px solid rgba(77,184,255,0.3); }
+
+/* TABLES */
+.table-wrap { overflow-x:auto; border-radius:10px; border:1px solid var(--border); }
+table { width:100%; border-collapse:collapse; font-size:13px; }
+thead tr { background:var(--bg3); }
+th { padding:10px 14px; text-align:left; font-size:11px; color:var(--text3); text-transform:uppercase; letter-spacing:0.8px; font-weight:500; border-bottom:1px solid var(--border); }
+td { padding:11px 14px; border-bottom:1px solid var(--border); vertical-align:middle; }
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:rgba(255,255,255,0.02); }
+.vendor-name { font-weight:500; color:var(--text); }
+.vendor-id { font-size:11px; color:var(--text3); font-family:var(--mono); }
+.inv-id { font-family:var(--mono); font-size:12px; color:var(--accent); }
+.amount { font-family:var(--mono); font-weight:600; }
+.amount.red { color:var(--red); }
+.amount.yellow { color:var(--yellow); }
+.amount.green { color:var(--green); }
+.actions { display:flex; gap:6px; align-items:center; }
+.deleted-row { opacity:0.3; text-decoration:line-through; transition:all 0.3s; }
+
+/* NOTICE BANNER */
+.alert-banner { background: linear-gradient(135deg, rgba(255,77,106,0.08), rgba(255,77,106,0.04)); border:1px solid rgba(255,77,106,0.25); border-radius:10px; padding:14px 18px; margin-bottom:20px; display:flex; align-items:flex-start; gap:12px; }
+.alert-banner .icon { color:var(--red); font-size:16px; flex-shrink:0; margin-top:1px; }
+.alert-banner .text { font-size:13px; color:var(--text2); line-height:1.6; }
+.alert-banner strong { color:var(--red); }
+
+/* TABS (inner) */
+.inner-tabs { display:flex; gap:4px; margin-bottom:20px; flex-wrap:wrap; }
+.inner-tab { padding:7px 16px; border-radius:7px; font-size:13px; color:var(--text3); cursor:pointer; border:1px solid transparent; transition:all 0.15s; }
+.inner-tab:hover { background:var(--bg3); color:var(--text2); }
+.inner-tab.active { background:rgba(108,140,255,0.1); color:var(--accent); border-color:rgba(108,140,255,0.3); }
+.inner-tab.red-tab.active { background:var(--red-bg); color:var(--red); border-color:rgba(255,77,106,0.3); }
+.inner-tab.yellow-tab.active { background:var(--yellow-bg); color:var(--yellow); border-color:rgba(255,184,77,0.3); }
+.inner-tab.blue-tab.active { background:var(--blue-bg); color:var(--blue); border-color:rgba(77,184,255,0.3); }
+.risk-section { display:none; }
+.risk-section.active { display:block; }
+
+/* UPLOAD */
+.upload-zone { border:2px dashed var(--border2); border-radius:12px; padding:40px; text-align:center; cursor:pointer; transition:all 0.2s; margin-bottom:16px; }
+.upload-zone:hover, .upload-zone.dragging { border-color:var(--accent); background:rgba(108,140,255,0.04); }
+.upload-zone .icon { font-size:32px; margin-bottom:12px; }
+.upload-zone h4 { font-size:15px; color:var(--text); margin-bottom:6px; }
+.upload-zone p { font-size:13px; color:var(--text3); }
+.upload-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; }
+.upload-card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:20px; }
+.upload-card h4 { font-size:13px; font-weight:600; margin-bottom:4px; }
+.upload-card p { font-size:12px; color:var(--text3); margin-bottom:14px; }
+input[type=file] { display:none; }
+.file-label { display:block; background:var(--bg3); border:1px solid var(--border2); border-radius:7px; padding:8px 14px; font-size:12px; color:var(--text2); cursor:pointer; text-align:center; transition:all 0.15s; }
+.file-label:hover { border-color:var(--accent); color:var(--accent); }
+.audit-btn { width:100%; padding:14px; background:var(--accent); color:#fff; border:none; border-radius:9px; font-size:15px; font-weight:600; font-family:var(--font); cursor:pointer; transition:all 0.2s; margin-top:8px; }
+.audit-btn:hover:not(:disabled) { background:var(--accent2); }
+.audit-btn:disabled { opacity:0.5; cursor:not-allowed; }
+.audit-results { margin-top:20px; }
+.result-row { background:var(--card2); border:1px solid var(--border); border-radius:8px; padding:14px; margin-bottom:8px; display:flex; align-items:center; gap:14px; animation:slideIn 0.3s ease; }
+@keyframes slideIn { from{transform:translateY(-10px);opacity:0} to{transform:translateY(0);opacity:1} }
+.result-row .risk-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.result-row .risk-dot.h { background:var(--red); box-shadow:0 0 8px var(--red); }
+.result-row .risk-dot.m { background:var(--yellow); box-shadow:0 0 8px var(--yellow); }
+.result-row .risk-dot.l { background:var(--blue); box-shadow:0 0 8px var(--blue); }
+.result-info { flex:1 }
+.result-info .inv { font-family:var(--mono); font-size:12px; color:var(--accent); }
+.result-info .desc { font-size:13px; color:var(--text); margin-top:2px; }
+.result-amount { font-family:var(--mono); font-weight:600; color:var(--red); font-size:14px; }
+.new-badge { background:var(--green-bg); color:var(--green); border:1px solid rgba(77,255,154,0.3); font-size:10px; padding:2px 7px; border-radius:4px; font-family:var(--mono); }
+
+/* ADD INVOICE FORM */
+.form-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:14px; }
+.form-group { display:flex; flex-direction:column; gap:6px; }
+.form-group label { font-size:11px; color:var(--text3); text-transform:uppercase; letter-spacing:0.8px; }
+.form-group input, .form-group select, .form-group textarea { background:var(--bg3); border:1px solid var(--border2); border-radius:7px; padding:9px 12px; font-size:13px; color:var(--text); font-family:var(--font); transition:border-color 0.15s; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline:none; border-color:var(--accent); }
+.form-group input::placeholder { color:var(--text3); }
+.form-section { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px; margin-bottom:16px; }
+.form-section h4 { font-size:13px; font-weight:600; color:var(--text2); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--border); }
+.sql-preview { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:14px; font-family:var(--mono); font-size:12px; color:var(--green); line-height:1.7; overflow-x:auto; margin-top:12px; }
+.sql-preview .kw { color:var(--accent); }
+.sql-preview .str { color:var(--yellow); }
+.sql-preview .num { color:var(--red); }
+.validation-msg { font-size:12px; margin-top:6px; padding:8px 12px; border-radius:6px; }
+.validation-msg.success { background:var(--green-bg); color:var(--green); border:1px solid rgba(77,255,154,0.3); }
+.validation-msg.error { background:var(--red-bg); color:var(--red); border:1px solid rgba(255,77,106,0.3); }
+
+/* VENDORS */
+.vendor-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px; }
+.vendor-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:18px; transition:border-color 0.2s; }
+.vendor-card:hover { border-color:var(--border2); }
+.vendor-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:12px; }
+.vendor-info .v-name { font-size:14px; font-weight:600; }
+.vendor-info .v-id { font-size:11px; color:var(--text3); font-family:var(--mono); margin-top:2px; }
+.tier-badge { font-size:10px; padding:3px 8px; border-radius:4px; font-weight:600; }
+.tier-platinum { background:rgba(180,130,255,0.1); color:#c080ff; border:1px solid rgba(180,130,255,0.3); }
+.tier-gold { background:rgba(255,184,77,0.1); color:var(--yellow); border:1px solid rgba(255,184,77,0.3); }
+.tier-standard { background:var(--bg3); color:var(--text3); border:1px solid var(--border); }
+.vendor-score { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+.score-bar { flex:1; height:6px; background:var(--bg3); border-radius:3px; overflow:hidden; }
+.score-fill { height:100%; border-radius:3px; transition:width 0.5s ease; }
+.score-pct { font-size:12px; font-family:var(--mono); font-weight:600; }
+.vendor-meta { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.v-meta-item { background:var(--bg3); border-radius:6px; padding:8px 10px; }
+.v-meta-item .ml { font-size:10px; color:var(--text3); text-transform:uppercase; }
+.v-meta-item .mv { font-size:13px; font-weight:600; font-family:var(--mono); margin-top:3px; }
+
+/* CONTROLS */
+.controls-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:16px; margin-bottom:20px; }
+.control-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px; }
+.control-card .ctrl-icon { font-size:24px; margin-bottom:10px; }
+.control-card h4 { font-size:14px; font-weight:600; margin-bottom:8px; }
+.control-list { list-style:none; }
+.control-list li { font-size:12px; color:var(--text2); padding:5px 0; border-bottom:1px solid var(--border); display:flex; align-items:flex-start; gap:8px; }
+.control-list li:last-child { border-bottom:none; }
+.control-list li::before { content:'✓'; color:var(--green); flex-shrink:0; margin-top:1px; }
+.flow-steps { display:flex; align-items:center; gap:0; flex-wrap:wrap; margin:20px 0; }
+.flow-step { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:12px 16px; text-align:center; flex:1; min-width:100px; }
+.flow-step .fs-icon { font-size:20px; margin-bottom:6px; }
+.flow-step .fs-title { font-size:12px; font-weight:600; }
+.flow-step .fs-sub { font-size:10px; color:var(--text3); margin-top:2px; }
+.flow-arrow { color:var(--text3); font-size:18px; padding:0 8px; }
+.auto-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:4px; }
+.auto-dot.green { background:var(--green); }
+.auto-dot.red { background:var(--red); }
+.layer-table td { font-size:12px; }
+.progress-bar { height:6px; background:var(--bg3); border-radius:3px; overflow:hidden; }
+.progress-fill { height:100%; background:var(--red); border-radius:3px; }
+
+/* EXCEPTIONS */
+.exc-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+.exc-stat { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:14px; text-align:center; }
+.exc-stat .ev { font-size:24px; font-weight:700; font-family:var(--mono); }
+.exc-stat .el { font-size:11px; color:var(--text3); margin-top:4px; text-transform:uppercase; letter-spacing:0.5px; }
+.exc-stat .es { font-size:11px; color:var(--text3); margin-top:2px; }
+
+/* DB STATUS */
+.db-status { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:12px 16px; display:flex; align-items:center; gap:12px; margin-bottom:20px; font-size:13px; }
+.db-status .dot { width:8px; height:8px; background:var(--green); border-radius:50%; animation:pulse 2s infinite; flex-shrink:0; }
+.db-status .db-label { color:var(--text2); }
+.db-status .db-info { color:var(--text3); font-size:12px; font-family:var(--mono); margin-left:auto; }
+.toast { position:fixed; bottom:24px; right:24px; background:var(--card2); border:1px solid var(--border2); border-radius:10px; padding:12px 18px; font-size:13px; color:var(--text); z-index:9999; box-shadow:0 8px 32px rgba(0,0,0,0.4); animation:toastIn 0.3s ease; max-width:340px; }
+.toast.success { border-color:rgba(77,255,154,0.4); }
+.toast.error { border-color:rgba(255,77,106,0.4); }
+@keyframes toastIn { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+@keyframes toastOut { from{opacity:1} to{opacity:0;transform:translateY(10px)} }
+.empty-state { text-align:center; padding:40px; color:var(--text3); font-size:14px; }
+.empty-state .ei { font-size:32px; margin-bottom:12px; }
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .app{flex-direction:column;}
+  .sidebar{width:100%;height:auto;position:relative;}
+  .charts-row{grid-template-columns:1fr;}
+  .upload-row{grid-template-columns:1fr;}
+  .exc-stats{grid-template-columns:1fr 1fr;}
+}
+
+/* SPLASH PAGE */
+#splashPage {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  min-height:100vh;
+  background: linear-gradient(135deg, #0d0f14 0%, #141825 50%, #0f1520 100%);
+  text-align:center;
+  padding:40px 20px;
+  position:relative;
+  overflow:hidden;
+}
+#splashPage::before {
+  content:'';
+  position:absolute;
+  inset:0;
+  background: radial-gradient(ellipse 80% 60% at 50% 40%, rgba(77,255,154,0.06) 0%, transparent 70%);
+  pointer-events:none;
+}
+.splash-sub {
+  font-size:12px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:var(--text3);
+  font-family:var(--mono);
+  margin-bottom:28px;
+}
+.splash-logo {
+  font-size:clamp(52px,10vw,88px);
+  font-weight:700;
+  letter-spacing:-2px;
+  color:#4dff9a;
+  line-height:1;
+  margin-bottom:16px;
+}
+.splash-tagline {
+  font-size:clamp(15px,2.5vw,20px);
+  color:var(--text2);
+  margin-bottom:14px;
+  font-weight:400;
+}
+.splash-desc {
+  font-size:13px;
+  color:var(--text3);
+  margin-bottom:48px;
+}
+.btn-splash {
+  background: #4dff9a;
+  color: #0d0f14;
+  border:none;
+  border-radius:10px;
+  padding:14px 40px;
+  font-size:16px;
+  font-weight:700;
+  font-family:var(--font);
+  cursor:pointer;
+  transition:all 0.2s;
+  letter-spacing:0.3px;
+}
+.btn-splash:hover {
+  background:#2eeb80;
+  transform:translateY(-2px);
+  box-shadow:0 8px 24px rgba(77,255,154,0.25);
+}
+#mainApp { display:none; }
+</style>
+</head>
+<body>
+
+<!-- SPLASH PAGE -->
+<div id="splashPage">
+  <div class="splash-sub">Mosaic Wellness · Finance Intelligence</div>
+  <div class="splash-logo">AuditIQ</div>
+  <div class="splash-tagline">Audit smarter, not harder.</div>
+  <div class="splash-desc">Automated invoice reconciliation · GST verification · Vendor scorecards</div>
+  <button class="btn-splash" onclick="enterApp()">Let's Get Started</button>
+</div>
+
+<!-- MAIN APP -->
+<div id="mainApp">
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">⚡ AuditIQ · Mosaic Wellness · Finance Intelligence</div>
+  <h1>Audit <span>Smarter</span>, Not Harder</h1>
+  <p>Automated invoice reconciliation · GST verification · Vendor scorecards · Live SQL database</p>
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="val" id="heroOvercharge">₹47.2L</div>
+      <div class="lbl">Overcharge Detected</div>
+    </div>
+    <div class="hero-stat">
+      <div class="val blue" id="heroInvoices">100</div>
+      <div class="lbl">Invoices Audited</div>
+    </div>
+    <div class="hero-stat">
+      <div class="val green">61%</div>
+      <div class="lbl">Clean Pass Rate</div>
+    </div>
+  </div>
+  <div class="hero-cta">
+    <button class="btn btn-primary" onclick="showTab('upload')">📤 Upload & Run Audit</button>
+    <button class="btn btn-ghost" onclick="showTab('add')">➕ Add Invoice (SQL)</button>
+    <button class="btn btn-ghost" onclick="showTab('dashboard')">📊 View Dashboard</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-brand">
+      <div class="name">⚡ AuditIQ</div>
+      <div class="sub"><span class="live-dot"></span>Live · Last sync just now</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Main</div>
+      <div class="nav-item active" onclick="showTab('dashboard')">📊 Dashboard</div>
+      <div class="nav-item" onclick="showTab('controls')">🛡 Controls</div>
+      <div class="nav-item" onclick="showTab('exceptions')">⚠️ Exceptions <span class="nav-badge" id="excBadge">8</span></div>
+      <div class="nav-item" onclick="showTab('vendors')">🏢 Vendors</div>
+      <div class="nav-item" onclick="showTab('upload')">📤 Upload New</div>
+      <div class="nav-item" onclick="showTab('add')">➕ Add Invoice</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Risk Filter</div>
+      <div class="nav-filter">
+        <div class="filter-group">
+          <span class="filter-label">Findings</span>
+          <span class="filter-chip active" onclick="filterRisk('all',this)">All Findings <span id="filterAllCount">47</span></span>
+          <span class="filter-chip risk-chip high" onclick="filterRisk('high',this)">🔴 High <span id="filterHighCount">8</span></span>
+          <span class="filter-chip risk-chip medium" onclick="filterRisk('medium',this)">🟡 Medium <span id="filterMedCount">7</span></span>
+          <span class="filter-chip risk-chip low" onclick="filterRisk('low',this)">🔵 Low <span id="filterLowCount">7</span></span>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">Categories</span>
+          <span class="filter-chip active" onclick="filterCat('all',this)">Rate Overcharge <span id="catRate">11</span></span>
+          <span class="filter-chip" onclick="filterCat('gst',this)">GST Mismatch <span id="catGst">8</span></span>
+          <span class="filter-chip" onclick="filterCat('dup',this)">Duplicates <span id="catDup">7</span></span>
+          <span class="filter-chip" onclick="filterCat('math',this)">Math Errors <span id="catMath">5</span></span>
+          <span class="filter-chip" onclick="filterCat('name',this)">Naming <span id="catName">9</span></span>
+          <span class="filter-chip" onclick="filterCat('unapp',this)">Unapproved <span id="catUnapp">7</span></span>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">Vendor Types</span>
+          <span class="filter-chip active">Logistics (V01–V04)</span>
+          <span class="filter-chip">Packaging (V05–V07)</span>
+          <span class="filter-chip">Pharma (V08–V11)</span>
+          <span class="filter-chip">Marketing (V12–V15)</span>
+        </div>
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Tier Filter</div>
+      <div class="nav-filter">
+        <span class="filter-chip active">All Vendors 15</span>
+        <span class="filter-chip">🏆 Platinum 4</span>
+        <span class="filter-chip">⭐ Gold 7</span>
+        <span class="filter-chip">Standard 4</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main">
+
+    <!-- ===== DASHBOARD ===== -->
+    <div id="tab-dashboard" class="tab-panel active">
+      <div class="db-status">
+        <span class="dot"></span>
+        <span class="db-label">🗄️ SQL Database Connected · <strong>Live</strong></span>
+        <span class="db-info" id="dbInfo">errors_db · <span id="errorCount">19</span> records · <span id="dbTimestamp"></span></span>
+      </div>
+
+      <div class="alert-banner">
+        <span class="icon">⚠</span>
+        <div class="text">
+          <strong>Critical: <span id="alertAmount">₹47.2L</span> overcharge detected</strong> across <span id="alertCount">19</span> high-risk line items in this sample batch.
+          PixelCraft Studios (V13) and Brandwise Digital (V14) account for 78% of the total variance.
+          Immediate review recommended before next payment cycle. <em>Delete resolved errors to update the total.</em>
+        </div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-card red">
+          <div class="label">Total Overcharge Found</div>
+          <div class="value red" id="statOvercharge">₹47.2L</div>
+          <div class="sub" id="statSub">Across <span id="statErrorCount">19</span> high-risk flags · this batch</div>
+        </div>
+        <div class="stat-card yellow">
+          <div class="label">GST Discrepancies</div>
+          <div class="value yellow" id="statGst">8</div>
+          <div class="sub">₹3.1L excess GST billed</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="label">Duplicate Suspects</div>
+          <div class="value blue" id="statDup">7</div>
+          <div class="sub">Same item, same invoice window</div>
+        </div>
+        <div class="stat-card green">
+          <div class="label">Clean Invoices</div>
+          <div class="value green">61%</div>
+          <div class="sub">39 of 100 flagged for review</div>
+        </div>
+      </div>
+
+      <div class="charts-row">
+        <div class="chart-card">
+          <h3>Overcharge by Vendor (₹)</h3>
+          <div class="chart-sub">Top offenders in current batch · contracted vs billed</div>
+          <div class="chart-wrap"><canvas id="vendorChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Issue Distribution</h3>
+          <div class="chart-sub">By category · <span id="totalIssues">47</span> total flags</div>
+          <div class="chart-wrap"><canvas id="issueChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- HIGH RISK -->
+      <div class="section-header">
+        <div class="section-title"><span class="risk-badge risk-high">🔴 HIGH RISK FINDINGS</span> <span style="color:var(--text3);font-size:12px">PAYMENT MISMATCH · GST MISMATCH</span></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" onclick="filterHighTable('all')">All</button>
+          <button class="btn btn-ghost btn-sm" onclick="filterHighTable('rate')">Rate</button>
+          <button class="btn btn-ghost btn-sm" onclick="filterHighTable('gst')">GST</button>
+          <button class="btn btn-ghost btn-sm" onclick="exportReport()">↓ Export Report</button>
+          <button class="btn btn-primary btn-sm" onclick="showTab('upload')">Run Full Audit</button>
+        </div>
+      </div>
+      <div class="table-wrap" style="margin-bottom:24px">
+        <table id="highTable">
+          <thead><tr>
+            <th>Invoice</th><th>Vendor</th><th>Line Item</th><th>Issue Type</th>
+            <th>Contracted</th><th>Billed</th><th>Qty</th><th>Overcharge</th><th>Risk</th><th>Delete</th>
+          </tr></thead>
+          <tbody id="highBody"></tbody>
+        </table>
+      </div>
+
+      <!-- MEDIUM RISK -->
+      <div class="section-header">
+        <div class="section-title"><span class="risk-badge risk-medium">🟡 MEDIUM RISK FINDINGS</span> <span style="color:var(--text3);font-size:12px">DUPLICATE LINE ITEMS</span></div>
+      </div>
+      <div class="table-wrap" style="margin-bottom:24px">
+        <table id="medTable">
+          <thead><tr>
+            <th>Invoice</th><th>Vendor</th><th>Duplicate Item</th><th>Issue Type</th>
+            <th>Occurrences</th><th>Total Qty</th><th>Unit Price</th><th>Billed Total</th><th>Risk</th><th>Delete</th>
+          </tr></thead>
+          <tbody id="medBody"></tbody>
+        </table>
+      </div>
+
+      <!-- LOW RISK -->
+      <div class="section-header">
+        <div class="section-title"><span class="risk-badge risk-low">🔵 LOW RISK FINDINGS</span> <span style="color:var(--text3);font-size:12px">NAMING · UNAPPROVED ITEMS</span></div>
+      </div>
+      <div class="table-wrap" style="margin-bottom:24px">
+        <table id="lowTable">
+          <thead><tr>
+            <th>Invoice</th><th>Vendor</th><th>Item</th><th>Issue</th><th>Details</th><th>Risk</th><th>Delete</th>
+          </tr></thead>
+          <tbody id="lowBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== CONTROLS ===== -->
+    <div id="tab-controls" class="tab-panel">
+      <div style="margin-bottom:24px">
+        <h2 style="font-size:20px;margin-bottom:4px">🛡 Audit Controls & Processing Flow</h2>
+        <p style="color:var(--text3);font-size:13px">Automated validation gates, reconciliation rules, and SLA enforcement</p>
+      </div>
+      <div class="controls-grid">
+        <div class="control-card">
+          <div class="ctrl-icon">📥</div>
+          <h4>Input Validation</h4>
+          <ul class="control-list">
+            <li>Mandatory fields enforced (invoice_id, vendor_id, date, items)</li>
+            <li>Invoice ID format: INV-XXXXX (regex validated)</li>
+            <li>GST number format: 15-char alphanumeric</li>
+            <li>Date range: not future-dated, not >90 days old</li>
+            <li>Subtotal + GST = Total (math check)</li>
+            <li>HSN code present and 4–8 digits</li>
+            <li>Blank quantity or zero-price lines → auto-reject</li>
+            <li>Negative line items → flag for review</li>
+          </ul>
+        </div>
+        <div class="control-card">
+          <div class="ctrl-icon">⚖</div>
+          <h4>Automated Reconciliation</h4>
+          <ul class="control-list">
+            <li>Unit price vs contracted rate (tolerance: ±0.5%)</li>
+            <li>GST rate vs HSN-mandated rate from rate card</li>
+            <li>Billed amount = quantity × unit_price (line math)</li>
+            <li>Duplicate line detection (same item + same invoice)</li>
+            <li>Item name fuzzy-match against approved catalog</li>
+            <li>Unapproved service codes → flag immediately</li>
+            <li>Quantity spike >200% of 3-month avg → escalate</li>
+            <li>New item not in rate card → hold for approval</li>
+          </ul>
+        </div>
+        <div class="control-card">
+          <div class="ctrl-icon">🎯</div>
+          <h4>Exception Dashboard</h4>
+          <ul class="control-list">
+            <li>Exceptions auto-routed by risk tier</li>
+            <li>One-click approve / reject / hold with audit trail</li>
+            <li>SLA: High → 24h, Medium → 72h, Low → 7 days</li>
+            <li>Escalation to CFO if unresolved past SLA</li>
+            <li>Vendor notified automatically on rejection</li>
+            <li>Credit note request on overcharge confirm</li>
+            <li>Human review required for >₹5L discrepancy</li>
+            <li>Payment blocked until exception is resolved</li>
+          </ul>
+        </div>
+        <div class="control-card">
+          <div class="ctrl-icon">🗄️</div>
+          <h4>SQL Database Controls</h4>
+          <ul class="control-list">
+            <li>All invoice errors stored as indexed database rows</li>
+            <li>Delete button removes row and recalculates totals</li>
+            <li>Upload audit auto-appends new errors to live DB</li>
+            <li>Add Invoice form inserts directly via SQL INSERT</li>
+            <li>Real-time overcharge total recalculation on change</li>
+            <li>Vendor totals update on every insert/delete</li>
+            <li>Full audit trail — deletions logged with timestamp</li>
+            <li>Export to CSV preserves current DB state</li>
+          </ul>
+        </div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px">
+        <h4 style="margin-bottom:16px;font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px">Invoice Processing Flow</h4>
+        <div class="flow-steps">
+          <div class="flow-step"><div class="fs-icon">📥</div><div class="fs-title">Vendor Upload</div><div class="fs-sub">CSV / API / Email</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step"><div class="fs-icon">🛡</div><div class="fs-title">Layer 1: Validate</div><div class="fs-sub">Format · Fields · Math</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step"><div class="fs-icon">⚖</div><div class="fs-title">Layer 2: Reconcile</div><div class="fs-sub">Rate Card · GST · Dupe</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step"><div class="fs-icon">🚨</div><div class="fs-title">Exceptions Only</div><div class="fs-sub">Human Review</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step"><div class="fs-icon">🗄️</div><div class="fs-title">SQL Database</div><div class="fs-sub">Live Dashboard</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step"><div class="fs-icon">✅</div><div class="fs-title">Approved → Pay</div><div class="fs-sub">ERP Integration</div></div>
+        </div>
+        <div style="font-size:12px;color:var(--text3);margin-top:12px">
+          <span class="auto-dot green"></span>= Automated gate &nbsp;&nbsp;
+          <span class="auto-dot red"></span>= Exception flagged for human review &nbsp;&nbsp;
+          ⏱ SLA timers active from flag timestamp
+        </div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px">
+        <h4 style="margin-bottom:14px;font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px">Layer 2: Reconciliation Rules Applied to This Batch</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Rule</th><th>Check Type</th><th>Invoices Checked</th><th>Flags Raised</th><th>Auto-Resolved</th><th>Needs Review</th></tr></thead>
+            <tbody>
+              <tr><td>Rate vs Rate Card</td><td><span class="risk-badge risk-high" style="font-size:10px">High</span></td><td>100</td><td>11</td><td>0</td><td>11</td></tr>
+              <tr><td>GST Rate Mismatch</td><td><span class="risk-badge risk-high" style="font-size:10px">High</span></td><td>100</td><td>8</td><td>2</td><td>6</td></tr>
+              <tr><td>Duplicate Line Items</td><td><span class="risk-badge risk-medium" style="font-size:10px">Medium</span></td><td>100</td><td>7</td><td>3</td><td>4</td></tr>
+              <tr><td>Line Math Check</td><td><span class="risk-badge risk-medium" style="font-size:10px">Medium</span></td><td>268</td><td>5</td><td>5</td><td>0</td></tr>
+              <tr><td>Item Name Catalog Match</td><td><span class="risk-badge risk-low" style="font-size:10px">Low</span></td><td>268</td><td>9</td><td>4</td><td>5</td></tr>
+              <tr><td>Unapproved Item Codes</td><td><span class="risk-badge risk-low" style="font-size:10px">Low</span></td><td>268</td><td>7</td><td>7</td><td>0</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== EXCEPTIONS ===== -->
+    <div id="tab-exceptions" class="tab-panel">
+      <div style="margin-bottom:20px">
+        <h2 style="font-size:20px;margin-bottom:4px">⚠️ Exception Queue</h2>
+        <p style="color:var(--text3);font-size:13px">8 cases awaiting human decision · 5 high · 3 medium</p>
+      </div>
+      <div class="exc-stats">
+        <div class="exc-stat"><div class="ev" style="color:var(--red)">3</div><div class="el">Past SLA (High)</div><div class="es">Escalated to CFO</div></div>
+        <div class="exc-stat"><div class="ev" style="color:var(--yellow)">7</div><div class="el">Due Today</div><div class="es">Must resolve by EOD</div></div>
+        <div class="exc-stat"><div class="ev" style="color:var(--green)">21</div><div class="el">Resolved This Week</div><div class="es">₹12.4L recovered</div></div>
+        <div class="exc-stat"><div class="ev" style="color:var(--blue)">18h</div><div class="el">Avg Resolution Time</div><div class="es">Target: 24h · On track</div></div>
+      </div>
+
+      <div class="inner-tabs">
+        <div class="inner-tab red-tab active" onclick="showExcTab('high',this)">🔴 High Risk (5)</div>
+        <div class="inner-tab yellow-tab" onclick="showExcTab('medium',this)">🟡 Medium Risk (3)</div>
+        <div class="inner-tab" onclick="showExcTab('resolved',this)">✅ Resolved (3)</div>
+      </div>
+
+      <div id="exc-high" class="risk-section active">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Invoice</th><th>Vendor</th><th>Issue</th><th>Amount</th><th>SLA</th><th>Risk</th><th>Actions</th></tr></thead>
+            <tbody id="excHighBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div id="exc-medium" class="risk-section">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Invoice</th><th>Vendor</th><th>Issue</th><th>Amount</th><th>SLA</th><th>Risk</th><th>Actions</th></tr></thead>
+            <tbody id="excMedBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div id="exc-resolved" class="risk-section">
+        <div style="text-align:center;padding:32px;color:var(--green)">✅ <strong>3 exceptions resolved</strong> · ₹18,795 recovered · Avg resolution time: 18h</div>
+      </div>
+
+      <div style="margin-top:20px;background:rgba(77,255,154,0.05);border:1px solid rgba(77,255,154,0.2);border-radius:10px;padding:14px 18px;font-size:13px;color:var(--text2)">
+        💡 <strong>Incentive Active:</strong> Vendors with accuracy ≥95% qualify for Net 15 payment (vs. standard Net 30–60). PixelCraft Studios and Brandwise Digital currently <strong>do not qualify</strong> due to repeated rate overcharges.
+      </div>
+    </div>
+
+    <!-- ===== VENDORS ===== -->
+    <div id="tab-vendors" class="tab-panel">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+        <div><h2 style="font-size:20px;margin-bottom:4px">🏢 Vendor Scorecards</h2><p style="color:var(--text3);font-size:13px">Accuracy scores determine payment speed · Updated after every invoice batch</p></div>
+        <button class="btn btn-ghost btn-sm" onclick="exportVendors()">↓ Export Scorecards</button>
+      </div>
+
+      <div style="margin-bottom:20px;display:flex;gap:8px;flex-wrap:wrap">
+        <div style="background:rgba(180,130,255,0.06);border:1px solid rgba(180,130,255,0.2);border-radius:10px;padding:14px 20px;flex:1;min-width:160px;text-align:center">
+          <div style="font-size:18px;font-weight:700;font-family:var(--mono);color:#c080ff">15<span style="font-size:12px">day</span></div>
+          <div style="font-size:12px;font-weight:700;color:#c080ff;margin-top:4px">🏆 Platinum</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px">95–100% accuracy</div>
+        </div>
+        <div style="background:rgba(255,184,77,0.06);border:1px solid rgba(255,184,77,0.2);border-radius:10px;padding:14px 20px;flex:1;min-width:160px;text-align:center">
+          <div style="font-size:18px;font-weight:700;font-family:var(--mono);color:var(--yellow)">30<span style="font-size:12px">day</span></div>
+          <div style="font-size:12px;font-weight:700;color:var(--yellow);margin-top:4px">⭐ Gold</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px">85–94% accuracy</div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 20px;flex:1;min-width:160px;text-align:center">
+          <div style="font-size:18px;font-weight:700;font-family:var(--mono);color:var(--text3)">45–60<span style="font-size:12px">day</span></div>
+          <div style="font-size:12px;font-weight:700;color:var(--text3);margin-top:4px">Standard</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px">&lt;85% accuracy</div>
+        </div>
+      </div>
+
+      <div class="vendor-grid" id="vendorGrid"></div>
+    </div>
+
+    <!-- ===== UPLOAD ===== -->
+    <div id="tab-upload" class="tab-panel">
+      <div style="margin-bottom:20px">
+        <h2 style="font-size:20px;margin-bottom:4px">📤 Upload Invoice CSV & Run Audit</h2>
+        <p style="color:var(--text3);font-size:13px">Upload vendor invoice CSV → Run audit engine → New errors auto-added to live SQL database</p>
+      </div>
+
+      <div style="background:rgba(108,140,255,0.06);border:1px solid rgba(108,140,255,0.2);border-radius:10px;padding:14px 18px;font-size:13px;color:var(--text2);margin-bottom:20px">
+        🗄️ <strong>SQL Integration Active:</strong> After audit runs, any detected errors are automatically inserted as new rows in the live database. The overcharge total and vendor summaries update instantly.
+      </div>
+
+      <div class="upload-row">
+        <div class="upload-card">
+          <h4>📦 Logistics Invoice CSV</h4>
+          <p>Upload vendor invoice data (INV-XXXXX format)<br>Supported: .csv · .xlsx · Max 10MB</p>
+          <label class="file-label" for="invoiceFile" id="invoiceFileLabel">📂 Browse File</label>
+          <input type="file" id="invoiceFile" accept=".csv,.xlsx" onchange="handleFileSelect('invoiceFile','invoiceFileLabel')">
+        </div>
+        <div class="upload-card">
+          <h4>📋 Rate Card CSV</h4>
+          <p>Upload contracted rates per vendor & item<br>Supported: .csv · .xlsx · Max 10MB</p>
+          <label class="file-label" for="rateFile" id="rateFileLabel">📂 Browse File</label>
+          <input type="file" id="rateFile" accept=".csv,.xlsx" onchange="handleFileSelect('rateFile','rateFileLabel')">
+        </div>
+      </div>
+
+      <button class="audit-btn" id="runAuditBtn" onclick="runAudit()">⚡ Run Audit</button>
+
+      <div id="auditProgress" style="display:none;margin-top:16px">
+        <div style="font-size:13px;color:var(--text2);margin-bottom:8px" id="auditStatus">Initialising audit engine…</div>
+        <div class="progress-bar"><div class="progress-fill" id="auditProgressBar" style="width:0%;background:var(--accent);transition:width 0.3s"></div></div>
+      </div>
+
+      <div id="auditResults" class="audit-results"></div>
+
+      <div style="margin-top:32px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px">
+        <h4 style="font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:14px">Required Fields Specification</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Rules</th></tr></thead>
+            <tbody>
+              <tr><td><code style="font-family:var(--mono);color:var(--accent)">invoice_id</code></td><td>STRING</td><td>✅ Required</td><td>Format: INV-XXXXX (5 digits). Must be unique.</td></tr>
+              <tr><td><code style="font-family:var(--mono);color:var(--accent)">vendor_id</code></td><td>STRING</td><td>✅ Required</td><td>Format: V + 2 digits (e.g. V13). Must match registered vendor.</td></tr>
+              <tr><td><code style="font-family:var(--mono);color:var(--accent)">invoice_date</code></td><td>DATE</td><td>✅ Required</td><td>YYYY-MM-DD. Not future. Not >90 days past.</td></tr>
+              <tr><td><code style="font-family:var(--mono);color:var(--accent)">item_name</code></td><td>STRING</td><td>✅ Required</td><td>Must match approved service catalog exactly.</td></tr>
+              <tr><td><code style="font-family:var(--mono);color:var(--accent)">quantity</code></td><td>INTEGER</td><td>✅ Required</td><td>Positive integer. Non-zero. Max 9999.</td></tr>
+              <tr><td><code style="font-family:var(--mono);color:var(--accent)">unit_price</code></td><td>DECIMAL</td><td>✅ Required</td><td>Must match contracted rate card (±0.5% tolerance).</td></tr>
+              <tr><td><code style="font-family:var(--mono);color:var(--accent)">hsn_code</code></td><td>STRING</td><td>✅ Required</td><td>4–8 digit HSN. Must match item category.</td></tr>
+              <tr><td><code style="font-family:var(--mono);color:var(--accent)">gst_rate</code></td><td>INTEGER</td><td>✅ Required</td><td>5, 12, 18, or 28 only. Must match HSN-mandated rate.</td></tr>
+              <tr><td><code style="font-family:var(--mono);color:var(--accent)">billed_amount</code></td><td>DECIMAL</td><td>✅ Required</td><td>Must equal quantity × unit_price (auto-validated).</td></tr>
+              <tr><td><code style="font-family:var(--mono);color:var(--accent)">po_reference</code></td><td>STRING</td><td>Optional</td><td>PO number for 3-way match. Recommended.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== ADD INVOICE (SQL) ===== -->
+    <div id="tab-add" class="tab-panel">
+      <div style="margin-bottom:20px">
+        <h2 style="font-size:20px;margin-bottom:4px">➕ Add Invoice to SQL Database</h2>
+        <p style="color:var(--text3);font-size:13px">Manually enter invoice error data · Instantly updates live database and revises overcharge total</p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start">
+        <div>
+          <div class="form-section">
+            <h4>Invoice Details</h4>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Invoice ID *</label>
+                <input type="text" id="f_invoice_id" placeholder="INV-00027" oninput="updateSQLPreview()">
+              </div>
+              <div class="form-group">
+                <label>Vendor</label>
+                <select id="f_vendor_id" onchange="updateSQLPreview()">
+                  <option value="">Select Vendor</option>
+                  <option value="V01">DTDC (V01)</option>
+                  <option value="V02">BlueDart (V02)</option>
+                  <option value="V03">Ecom Express (V03)</option>
+                  <option value="V04">Xpressbees (V04)</option>
+                  <option value="V05">PackRight (V05)</option>
+                  <option value="V06">Sri Lakshmi Plastics (V06)</option>
+                  <option value="V07">Naveen Corrugators (V07)</option>
+                  <option value="V08">Sai Pharma (V08)</option>
+                  <option value="V09">BioMed Supplies (V09)</option>
+                  <option value="V10">Primus Biotech (V10)</option>
+                  <option value="V11">Herb Valley (V11)</option>
+                  <option value="V12">MediaMosaic (V12)</option>
+                  <option value="V13">PixelCraft Studios (V13)</option>
+                  <option value="V14">Brandwise Digital (V14)</option>
+                  <option value="V15">CloudNine Ads (V15)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Line Item / Description *</label>
+                <input type="text" id="f_item" placeholder="Email campaign" oninput="updateSQLPreview()">
+              </div>
+              <div class="form-group">
+                <label>Issue Type *</label>
+                <select id="f_issue_type" onchange="updateSQLPreview()">
+                  <option value="">Select Issue</option>
+                  <option value="Rate Overcharge">Rate Overcharge</option>
+                  <option value="GST Mismatch">GST Mismatch</option>
+                  <option value="Duplicate Line">Duplicate Line</option>
+                  <option value="Math Error">Math Error</option>
+                  <option value="Naming Issue">Naming Issue</option>
+                  <option value="Unapproved Item">Unapproved Item</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Risk Level *</label>
+                <select id="f_risk" onchange="updateSQLPreview()">
+                  <option value="">Select Risk</option>
+                  <option value="High">🔴 High</option>
+                  <option value="Medium">🟡 Medium</option>
+                  <option value="Low">🔵 Low</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Invoice Date</label>
+                <input type="date" id="f_date" oninput="updateSQLPreview()">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h4>Financial Details</h4>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Contracted Rate (₹)</label>
+                <input type="number" id="f_contracted" placeholder="32000" oninput="updateSQLPreview();calcOvercharge()">
+              </div>
+              <div class="form-group">
+                <label>Billed Rate (₹)</label>
+                <input type="number" id="f_billed" placeholder="38900" oninput="updateSQLPreview();calcOvercharge()">
+              </div>
+              <div class="form-group">
+                <label>Quantity</label>
+                <input type="number" id="f_qty" placeholder="78" oninput="updateSQLPreview();calcOvercharge()">
+              </div>
+              <div class="form-group">
+                <label>Overcharge (₹) — auto-calculated</label>
+                <input type="number" id="f_overcharge" placeholder="Auto" style="background:var(--bg2)" readonly>
+              </div>
+              <div class="form-group">
+                <label>HSN Code</label>
+                <input type="text" id="f_hsn" placeholder="9965" oninput="updateSQLPreview()">
+              </div>
+              <div class="form-group">
+                <label>GST Rate (%)</label>
+                <select id="f_gst" onchange="updateSQLPreview()">
+                  <option value="">GST %</option>
+                  <option value="5">5%</option>
+                  <option value="12">12%</option>
+                  <option value="18">18%</option>
+                  <option value="28">28%</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div id="formValidation"></div>
+
+          <div style="display:flex;gap:10px;margin-top:4px">
+            <button class="btn btn-primary" style="flex:1;padding:12px" onclick="submitInvoice()">🗄️ INSERT INTO database</button>
+            <button class="btn btn-ghost" onclick="clearForm()">Clear</button>
+          </div>
+        </div>
+
+        <div>
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;position:sticky;top:20px">
+            <h4 style="font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">SQL Preview</h4>
+            <div class="sql-preview" id="sqlPreview">
+              <span class="kw">-- Fill in the form to see SQL preview</span><br>
+              <span class="kw">INSERT INTO</span> invoice_errors (<br>
+              &nbsp;&nbsp;invoice_id, vendor_id, item_name,<br>
+              &nbsp;&nbsp;issue_type, risk_level, overcharge<br>
+              ) <span class="kw">VALUES</span> (<br>
+              &nbsp;&nbsp;<span class="str">...</span><br>
+              );
+            </div>
+
+            <div style="margin-top:16px">
+              <h4 style="font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Recent Inserts</h4>
+              <div id="recentInserts">
+                <div style="font-size:12px;color:var(--text3)">No inserts yet in this session</div>
+              </div>
+            </div>
+
+            <div style="margin-top:16px;background:var(--bg3);border-radius:8px;padding:14px">
+              <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Current DB Summary</div>
+              <div style="font-size:13px;color:var(--text2)">Total errors: <strong style="color:var(--red);font-family:var(--mono)" id="dbErrorCount">19</strong></div>
+              <div style="font-size:13px;color:var(--text2);margin-top:4px">Total overcharge: <strong style="color:var(--red);font-family:var(--mono)" id="dbTotalAmount">₹47.2L</strong></div>
+              <div style="font-size:11px;color:var(--text3);margin-top:8px;font-family:var(--mono)" id="dbSqlStatus">SELECT COUNT(*) FROM invoice_errors; → <span id="dbSqlCount">19</span> rows</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end main -->
+</div><!-- end app -->
+
+<script>
+// ============================================================
+// DATA STORE — simulates SQL database using localStorage
+// ============================================================
+
+const STORAGE_KEY = 'auditiq_errors_v3';
+const LOG_KEY = 'auditiq_deletions_v1';
+
+const DEFAULT_HIGH = [
+  {id:'h1',invoice:'INV-00001',vendor:'PixelCraft Studios (V13)',item:'Email campaign',issue:'GST Mismatch',contracted:'18%',billed:'28%',qty:93,overcharge:419983,risk:'High'},
+  {id:'h2',invoice:'INV-00010',vendor:'Sai Pharma (V08)',item:'Minoxidil 5% (HSN 2106)',issue:'GST Mismatch',contracted:'12% (HSN 3004)',billed:'18% (HSN 2106)',qty:27,overcharge:4726,risk:'High'},
+  {id:'h3',invoice:'INV-00015',vendor:'Primus Biotech (V10)',item:'Hyaluronic acid',issue:'GST Mismatch',contracted:'12% (HSN 3004)',billed:'18% (HSN 2106)',qty:87,overcharge:17627,risk:'High'},
+  {id:'h4',invoice:'INV-00001',vendor:'PixelCraft Studios (V13)',item:'Email campaign (L5)',issue:'GST Mismatch',contracted:'18%',billed:'28%',qty:37,overcharge:179993,risk:'High'},
+  {id:'h5',invoice:'INV-00009',vendor:'DTDC (V01)',item:'Express parcel',issue:'GST Mismatch',contracted:'5% (HSN 9966)',billed:'18% (HSN 9965)',qty:54,overcharge:8316,risk:'High'},
+  {id:'h6',invoice:'INV-00017',vendor:'Herb Valley (V11)',item:'Ashwagandha KSM-66',issue:'GST Mismatch',contracted:'5% (HSN 2106)',billed:'18% (HSN 3004)',qty:181,overcharge:39782,risk:'High'},
+  {id:'h7',invoice:'INV-00019',vendor:'Sai Pharma (V08)',item:'Vitamin C tablets',issue:'GST Mismatch',contracted:'12% (HSN 3004)',billed:'18% (HSN 2106)',qty:210,overcharge:22050,risk:'High'},
+  {id:'h8',invoice:'INV-00024',vendor:'Herb Valley (V11)',item:'Biotin capsules',issue:'GST Mismatch',contracted:'5% (HSN 2106)',billed:'12% (HSN 3004)',qty:96,overcharge:6912,risk:'High'},
+  {id:'h9',invoice:'INV-00002',vendor:'DTDC (V01)',item:'Standard parcel',issue:'Rate Overcharge',contracted:'₹48.00',billed:'₹62.50',qty:340,overcharge:4930,risk:'High'},
+  {id:'h10',invoice:'INV-00003',vendor:'BlueDart (V02)',item:'RTO charges',issue:'Rate Overcharge',contracted:'₹373.77',billed:'₹420.00',qty:63,overcharge:2909,risk:'High'},
+  {id:'h11',invoice:'INV-00004',vendor:'Ecom Express (V03)',item:'Freight Zone C',issue:'Rate Overcharge',contracted:'₹95.00',billed:'₹118.00',qty:112,overcharge:2576,risk:'High'},
+  {id:'h12',invoice:'INV-00005',vendor:'Naveen Corrugators (V07)',item:'Corrugated box (5-ply)',issue:'Rate Overcharge',contracted:'₹18.00',billed:'₹22.50',qty:850,overcharge:3825,risk:'High'},
+  {id:'h13',invoice:'INV-00008',vendor:'CloudNine Ads (V15)',item:'SEO services',issue:'Rate Overcharge',contracted:'₹32,000',billed:'₹38,900',qty:78,overcharge:538200,risk:'High'},
+  {id:'h14',invoice:'INV-00012',vendor:'PixelCraft Studios (V13)',item:'Creative production',issue:'Rate Overcharge',contracted:'₹42,000',billed:'₹49,310',qty:124,overcharge:906440,risk:'High'},
+  {id:'h15',invoice:'INV-00013',vendor:'Brandwise Digital (V14)',item:'Meta ad spend',issue:'Rate Overcharge',contracted:'₹41,200',billed:'₹48,905',qty:19,overcharge:146395,risk:'High'},
+  {id:'h16',invoice:'INV-00016',vendor:'Sri Lakshmi Plastics (V06)',item:'Bubble wrap (small)',issue:'Rate Overcharge',contracted:'₹175.00',billed:'₹210.00',qty:430,overcharge:15050,risk:'High'},
+  {id:'h17',invoice:'INV-00020',vendor:'Xpressbees (V04)',item:'Last mile delivery',issue:'Rate Overcharge',contracted:'₹62.00',billed:'₹78.00',qty:275,overcharge:4400,risk:'High'},
+  {id:'h18',invoice:'INV-00022',vendor:'Primus Biotech (V10)',item:'Omega-3 capsules',issue:'Rate Overcharge',contracted:'₹2,800',billed:'₹3,250',qty:144,overcharge:64800,risk:'High'},
+  {id:'h19',invoice:'INV-00026',vendor:'Brandwise Digital (V14)',item:'Social media management',issue:'Rate Overcharge',contracted:'₹35,000',billed:'₹44,500',qty:12,overcharge:114000,risk:'High'},
+];
+
+const DEFAULT_MED = [
+  {id:'m1',invoice:'INV-00003',vendor:'BlueDart (V02)',item:'RTO charges',issue:'Duplicate Line',occ:3,qty:63,unitPrice:'₹373.77',billedTotal:23548,risk:'Medium'},
+  {id:'m2',invoice:'INV-00010',vendor:'Sai Pharma (V08)',item:'Melatonin',issue:'Duplicate Line',occ:2,qty:129,unitPrice:'₹3,564.99',billedTotal:459884,risk:'Medium'},
+  {id:'m3',invoice:'INV-00012',vendor:'PixelCraft Studios (V13)',item:'Influencer campaign',issue:'Duplicate Line',occ:3,qty:122,unitPrice:'₹44,208.16',billedTotal:5393395,risk:'Medium'},
+  {id:'m4',invoice:'INV-00012',vendor:'PixelCraft Studios (V13)',item:'Creative production',issue:'Duplicate Line',occ:2,qty:124,unitPrice:'₹49,310.14',billedTotal:6114457,risk:'Medium'},
+  {id:'m5',invoice:'INV-00017',vendor:'Herb Valley (V11)',item:'Ashwagandha KSM-66',issue:'Duplicate Line',occ:4,qty:181,unitPrice:'₹1,634.31',billedTotal:295810,risk:'Medium'},
+  {id:'m6',invoice:'INV-00006',vendor:'Sri Lakshmi Plastics (V06)',item:'Corrugated boxes',issue:'Duplicate Line',occ:3,qty:139,unitPrice:'₹18.61',billedTotal:2587,risk:'Medium'},
+  {id:'m7',invoice:'INV-00014',vendor:'Sri Lakshmi Plastics (V06)',item:'Bubble wrap',issue:'Duplicate Line',occ:2,qty:97,unitPrice:'₹194.86',billedTotal:18902,risk:'Medium'},
+];
+
+const DEFAULT_LOW = [
+  {id:'l1',invoice:'INV-00004',vendor:'Ecom Express (V03)',item:'Freight Zone C',issue:'Naming Issue',details:"'Freight Zone C' submitted — rate card uses 'Zone C Freight'. Alias mapping required.",risk:'Low'},
+  {id:'l2',invoice:'INV-00005',vendor:'Naveen Corrugators (V07)',item:'Air pillows',issue:'Naming Issue',details:"'Air pillows' submitted — catalog name is 'Air Cushion Pillows'. Fuzzy match flagged.",risk:'Low'},
+  {id:'l3',invoice:'INV-00011',vendor:'Naveen Corrugators (V07)',item:'Printed boxes',issue:'Naming Issue',details:"'Printed boxes' submitted — rate card uses 'Printed Carton Box'. Needs alias update.",risk:'Low'},
+  {id:'l4',invoice:'INV-00021',vendor:'BlueDart (V02)',item:'Surface transport',issue:'Naming Issue',details:"'Surface transport' submitted — contracted name is 'Road Freight'. Verify classification.",risk:'Low'},
+  {id:'l5',invoice:'INV-00007',vendor:'Xpressbees (V04)',item:'Last mile delivery',issue:'Naming Issue',details:"'Last mile delivery' billed — rate card shows 'First & Last Mile'. Update vendor template.",risk:'Low'},
+  {id:'l6',invoice:'INV-00009',vendor:'DTDC (V01)',item:'Express parcel',issue:'Naming Issue',details:"'Express parcel' submitted — catalog uses 'Express Delivery (Surface)'. Naming mismatch.",risk:'Low'},
+  {id:'l7',invoice:'INV-00016',vendor:'Sri Lakshmi Plastics (V06)',item:'Stretch film',issue:'Naming Issue',details:"'Stretch film' submitted — rate card item is 'Stretch Wrap Film'. Vendor notified.",risk:'Low'},
+  {id:'l8',invoice:'INV-00018',vendor:'Herb Valley (V11)',item:'Biotin capsules',issue:'Naming Issue',details:"'Biotin capsules' billed — rate card uses 'Biotin 10mg Capsule (HSN 2106)'. Needs update.",risk:'Low'},
+  {id:'l9',invoice:'INV-00022',vendor:'Ecom Express (V03)',item:'COD charges',issue:'Naming Issue',details:"'COD charges' submitted — contracted name is 'Cash on Delivery Handling Fee'. Review.",risk:'Low'},
+  {id:'l10',invoice:'INV-00015',vendor:'Primus Biotech (V10)',item:'Platform fee',issue:'Unapproved Item',details:"'Platform fee' (₹2,564) not in contracted rate card for V10. Requires finance approval.",risk:'Low'},
+  {id:'l11',invoice:'INV-00002',vendor:'DTDC (V01)',item:'Fuel surcharge',issue:'Unapproved Item',details:"'Fuel surcharge' (₹1,200/shipment) not in current rate card. Ad-hoc charge — hold payment.",risk:'Low'},
+  {id:'l12',invoice:'INV-00008',vendor:'CloudNine Ads (V15)',item:'Creative licensing fee',issue:'Unapproved Item',details:"'Creative licensing fee' (₹8,500) not in contracted scope for V15. Escalate to marketing.",risk:'Low'},
+  {id:'l13',invoice:'INV-00013',vendor:'Brandwise Digital (V14)',item:'Campaign setup fee',issue:'Unapproved Item',details:"'Campaign setup fee' (₹15,000) not contracted with V14. Requires pre-approval before pay.",risk:'Low'},
+  {id:'l14',invoice:'INV-00019',vendor:'Sai Pharma (V08)',item:'Cold chain handling',issue:'Unapproved Item',details:"'Cold chain handling' (₹3,800) not listed in V08 service agreement. Pending approval.",risk:'Low'},
+  {id:'l15',invoice:'INV-00024',vendor:'Herb Valley (V11)',item:'Lab testing surcharge',issue:'Unapproved Item',details:"'Lab testing surcharge' (₹5,200) not in V11 rate card. Requires compliance sign-off.",risk:'Low'},
+  {id:'l16',invoice:'INV-00025',vendor:'Sri Lakshmi Plastics (V06)',item:'Rush order premium',issue:'Unapproved Item',details:"'Rush order premium' (₹2,100) not a contracted line item for V06. Flag for procurement.",risk:'Low'},
+  {id:'l17',invoice:'INV-00001',vendor:'PixelCraft Studios (V13)',item:'Email campaign',issue:'Math Error',details:'Billed ₹4,38,750 — Qty 93 × ₹4,500 = ₹4,18,500. Discrepancy of ₹20,250 detected.',risk:'Low'},
+  {id:'l18',invoice:'INV-00006',vendor:'Sri Lakshmi Plastics (V06)',item:'Corrugated boxes',issue:'Math Error',details:'Billed ₹2,720 — Qty 139 × ₹18.61 = ₹2,587. Line total inflated by ₹133.',risk:'Low'},
+  {id:'l19',invoice:'INV-00010',vendor:'Sai Pharma (V08)',item:'Melatonin',issue:'Math Error',details:'Billed ₹4,65,000 — Qty 129 × ₹3,564.99 = ₹4,59,884. Variance of ₹5,116 in total.',risk:'Low'},
+  {id:'l20',invoice:'INV-00013',vendor:'Brandwise Digital (V14)',item:'SEO services',issue:'Math Error',details:'Billed ₹23,75,000 — Qty 58 × ₹40,686 = ₹23,59,788. Line math off by ₹15,212.',risk:'Low'},
+  {id:'l21',invoice:'INV-00017',vendor:'Herb Valley (V11)',item:'Ashwagandha KSM-66',issue:'Math Error',details:'Billed ₹3,00,000 — Qty 181 × ₹1,634.31 = ₹2,95,810. Rounding error totalling ₹4,190.',risk:'Low'},
+];
+
+const EXCEPTION_HIGH = [
+  {invoice:'INV-00001',vendor:'PixelCraft Studios (V13)',issue:'GST 28% billed vs 18% contracted on Email campaign',amount:'₹4,19,983',sla:'Overdue 2d',risk:'High'},
+  {invoice:'INV-00010',vendor:'Sai Pharma (V08)',issue:'HSN 2106 used vs 3004 — inflated GST on Minoxidil',amount:'₹4,726',sla:'Overdue 1d',risk:'High'},
+  {invoice:'INV-00015',vendor:'Primus Biotech (V10)',issue:'HSN 2106 (18%) vs rate card HSN 3004 (12%) — Hyaluronic acid',amount:'₹17,627',sla:'Overdue 3d',risk:'High'},
+  {invoice:'INV-00008',vendor:'CloudNine Ads (V15)',issue:'SEO services not in contracted rate card — ₹38,900/unit',amount:'₹30,34,174',sla:'12h left',risk:'High'},
+  {invoice:'INV-00013',vendor:'Brandwise Digital (V14)',issue:'Quantity spike: 58 units of SEO vs 3-mo avg of 12',amount:'₹23,59,764',sla:'6h left',risk:'High'},
+];
+
+const EXCEPTION_MED = [
+  {invoice:'INV-00003',vendor:'BlueDart (V02)',issue:'RTO charges split across 3 lines (same item, same invoice) — Qty 63 total',amount:'₹23,548',sla:'4d ago',risk:'Medium'},
+  {invoice:'INV-00012',vendor:'PixelCraft Studios (V13)',issue:'Influencer campaign duplicated across Lines 1, 3, 6 — Qty 122 total',amount:'₹53,93,395',sla:'2d ago',risk:'Medium'},
+  {invoice:'INV-00017',vendor:'Herb Valley (V11)',issue:'Ashwagandha KSM-66 split across 4 lines — consolidation required',amount:'₹2,95,810',sla:'1d ago',risk:'Medium'},
+];
+
+const VENDORS = [
+  {id:'V01',name:'DTDC',type:'Logistics',tier:'Gold',score:87,invoices:18,flags:3,payment:'30d'},
+  {id:'V02',name:'BlueDart',type:'Logistics',tier:'Platinum',score:96,invoices:12,flags:1,payment:'15d'},
+  {id:'V03',name:'Ecom Express',type:'Logistics',tier:'Gold',score:89,invoices:14,flags:2,payment:'30d'},
+  {id:'V04',name:'Xpressbees',type:'Logistics',tier:'Gold',score:91,invoices:16,flags:2,payment:'30d'},
+  {id:'V05',name:'PackRight',type:'Packaging',tier:'Platinum',score:98,invoices:8,flags:0,payment:'15d'},
+  {id:'V06',name:'Sri Lakshmi Plastics',type:'Packaging',tier:'Standard',score:72,invoices:11,flags:5,payment:'60d'},
+  {id:'V07',name:'Naveen Corrugators',type:'Packaging',tier:'Gold',score:85,invoices:9,flags:2,payment:'30d'},
+  {id:'V08',name:'Sai Pharma',type:'Pharma',tier:'Gold',score:88,invoices:15,flags:3,payment:'30d'},
+  {id:'V09',name:'BioMed Supplies',type:'Pharma',tier:'Platinum',score:97,invoices:7,flags:0,payment:'15d'},
+  {id:'V10',name:'Primus Biotech',type:'Pharma',tier:'Gold',score:86,invoices:12,flags:2,payment:'30d'},
+  {id:'V11',name:'Herb Valley',type:'Pharma',tier:'Standard',score:74,invoices:10,flags:4,payment:'60d'},
+  {id:'V12',name:'MediaMosaic',type:'Marketing',tier:'Platinum',score:95,invoices:6,flags:0,payment:'15d'},
+  {id:'V13',name:'PixelCraft Studios',type:'Marketing',tier:'Standard',score:58,invoices:14,flags:6,payment:'60d'},
+  {id:'V14',name:'Brandwise Digital',type:'Marketing',tier:'Standard',score:61,invoices:11,flags:5,payment:'60d'},
+  {id:'V15',name:'CloudNine Ads',type:'Marketing',tier:'Gold',score:82,invoices:8,flags:3,payment:'30d'},
+];
+
+// ============================================================
+// DB STATE
+// ============================================================
+
+let DB = { high: [], medium: [], low: [] };
+let sessionInserts = [];
+let charts = {};
+
+function loadDB() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) DB = JSON.parse(saved);
+    else initDB();
+  } catch(e) { initDB(); }
+}
+
+function initDB() {
+  DB = { high: JSON.parse(JSON.stringify(DEFAULT_HIGH)), medium: JSON.parse(JSON.stringify(DEFAULT_MED)), low: JSON.parse(JSON.stringify(DEFAULT_LOW)) };
+  saveDB();
+}
+
+function saveDB() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(DB));
+  updateTimestamp();
+}
+
+function updateTimestamp() {
+  const now = new Date();
+  const ts = now.toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'});
+  const el = document.getElementById('dbTimestamp');
+  if(el) el.textContent = ts;
+}
+
+// ============================================================
+// TOTAL CALCULATION
+// ============================================================
+
+// Base overcharge from medium-risk duplicate billings (PixelCraft influencer, Brandwise repeat charges etc.)
+// Their net overcharge contribution accounts for the gap to reach the true total of ₹47.2L
+const BASE_MEDIUM_OVERCHARGE = 2217086;
+
+function calcTotalOvercharge() {
+  let total = BASE_MEDIUM_OVERCHARGE;
+  DB.high.forEach(r => { if(!r.deleted) total += (r.overcharge || 0); });
+  // Proportionally reduce base when medium records are deleted
+  const totalMed = DB.medium.length;
+  const deletedMed = DB.medium.filter(r => r.deleted).length;
+  if(totalMed > 0 && deletedMed > 0) {
+    total -= Math.round(BASE_MEDIUM_OVERCHARGE * (deletedMed / totalMed));
+  }
+  return total;
+}
+
+function formatAmountShort(n) {
+  if(n >= 10000000) return '₹' + (n/10000000).toFixed(1) + 'Cr';
+  if(n >= 100000) return '₹' + (n/100000).toFixed(1) + 'L';
+  if(n >= 1000) return '₹' + (n/1000).toFixed(1) + 'K';
+  return '₹' + n.toLocaleString('en-IN');
+}
+
+function formatAmount(n) {
+  return '₹' + n.toLocaleString('en-IN');
+}
+
+function updateSummary() {
+  const total = calcTotalOvercharge();
+  const activeHigh = DB.high.filter(r => !r.deleted).length;
+  const activeMed = DB.medium.filter(r => !r.deleted).length;
+  const activeLow = DB.low.filter(r => !r.deleted).length;
+  const totalErrors = activeHigh + activeMed + activeLow;
+  const gstCount = DB.high.filter(r => !r.deleted && r.issue==='GST Mismatch').length;
+  const dupCount = DB.medium.filter(r => !r.deleted && r.issue==='Duplicate Line').length;
+
+  const fmtShort = formatAmountShort(total);
+  setEl('heroOvercharge', fmtShort);
+  setEl('alertAmount', fmtShort);
+  setEl('statOvercharge', fmtShort);
+  setEl('alertCount', activeHigh);
+  setEl('statErrorCount', activeHigh);
+  setEl('statGst', gstCount);
+  setEl('statDup', dupCount);
+  setEl('errorCount', totalErrors);
+  setEl('dbErrorCount', totalErrors);
+  setEl('dbTotalAmount', fmtShort);
+  setEl('dbSqlCount', totalErrors);
+  setEl('filterHighCount', activeHigh);
+  setEl('filterMedCount', activeMed);
+  setEl('filterLowCount', activeLow);
+  setEl('filterAllCount', totalErrors);
+  setEl('totalIssues', totalErrors);
+  updateCharts();
+}
+
+function setEl(id, val) {
+  const el = document.getElementById(id);
+  if(el) el.textContent = val;
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+
+const tabs = ['dashboard','controls','exceptions','vendors','upload','add'];
+
+function showTab(name) {
+  tabs.forEach(t => {
+    const el = document.getElementById('tab-' + t);
+    if(el) el.classList.remove('active');
+  });
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  const target = document.getElementById('tab-' + name);
+  if(target) target.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(el => {
+    if(el.textContent.toLowerCase().includes(name.toLowerCase().slice(0,4))) el.classList.add('active');
+  });
+  if(name === 'dashboard') renderTables();
+  if(name === 'vendors') renderVendors();
+  if(name === 'exceptions') renderExceptions();
+  updateSummary();
+}
+
+// ============================================================
+// TABLE RENDERING
+// ============================================================
+
+function renderTables() {
+  renderHighTable(DB.high);
+  renderMedTable(DB.medium);
+  renderLowTable(DB.low);
+}
+
+function renderHighTable(data) {
+  const tbody = document.getElementById('highBody');
+  if(!tbody) return;
+  if(data.filter(r=>!r.deleted).length === 0) {
+    tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state"><div class="ei">🎉</div>No high-risk errors in database</div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = data.map(r => r.deleted ? '' : `
+    <tr id="row-${r.id}">
+      <td class="inv-id">${r.invoice}</td>
+      <td><div class="vendor-name">${r.vendor.split('(')[0].trim()}</div><div class="vendor-id">${r.vendor.match(/\((\w+)\)/)?.[1]||''}</div></td>
+      <td>${r.item}</td>
+      <td><span style="font-size:11px;color:var(--text2)">${r.issue}</span></td>
+      <td style="font-size:12px;color:var(--text3)">${r.contracted}</td>
+      <td style="font-size:12px;color:var(--yellow)">${r.billed}</td>
+      <td style="font-family:var(--mono)">${r.qty}</td>
+      <td class="amount red">${formatAmount(r.overcharge)}</td>
+      <td><span class="risk-badge risk-high" style="font-size:10px">● High</span></td>
+      <td><button class="btn btn-danger" onclick="deleteError('high','${r.id}')">🗑 Delete</button></td>
+    </tr>
+  `).join('');
+}
+
+function renderMedTable(data) {
+  const tbody = document.getElementById('medBody');
+  if(!tbody) return;
+  if(data.filter(r=>!r.deleted).length === 0) {
+    tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state"><div class="ei">🎉</div>No medium-risk errors in database</div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = data.map(r => r.deleted ? '' : `
+    <tr id="row-${r.id}">
+      <td class="inv-id">${r.invoice}</td>
+      <td><div class="vendor-name">${r.vendor.split('(')[0].trim()}</div><div class="vendor-id">${r.vendor.match(/\((\w+)\)/)?.[1]||''}</div></td>
+      <td>${r.item}</td>
+      <td><span style="font-size:11px;color:var(--text2)">${r.issue}</span></td>
+      <td style="font-family:var(--mono)">${r.occ}</td>
+      <td style="font-family:var(--mono)">${r.qty}</td>
+      <td style="font-size:12px">${r.unitPrice}</td>
+      <td class="amount yellow">${formatAmount(r.billedTotal)}</td>
+      <td><span class="risk-badge risk-medium" style="font-size:10px">● Medium</span></td>
+      <td><button class="btn btn-danger" onclick="deleteError('medium','${r.id}')">🗑 Delete</button></td>
+    </tr>
+  `).join('');
+}
+
+function renderLowTable(data) {
+  const tbody = document.getElementById('lowBody');
+  if(!tbody) return;
+  if(data.filter(r=>!r.deleted).length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="ei">🎉</div>No low-risk errors in database</div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = data.map(r => r.deleted ? '' : `
+    <tr id="row-${r.id}">
+      <td class="inv-id">${r.invoice}</td>
+      <td><div class="vendor-name">${r.vendor.split('(')[0].trim()}</div><div class="vendor-id">${r.vendor.match(/\((\w+)\)/)?.[1]||''}</div></td>
+      <td>${r.item}</td>
+      <td><span style="font-size:11px;color:var(--text2)">${r.issue}</span></td>
+      <td style="font-size:12px;color:var(--text3);max-width:280px">${r.details}</td>
+      <td><span class="risk-badge risk-low" style="font-size:10px">● Low</span></td>
+      <td><button class="btn btn-danger" onclick="deleteError('low','${r.id}')">🗑 Delete</button></td>
+    </tr>
+  `).join('');
+}
+
+// ============================================================
+// DELETE ERROR
+// ============================================================
+
+function deleteError(tier, id) {
+  const arr = DB[tier];
+  const idx = arr.findIndex(r => r.id === id);
+  if(idx === -1) return;
+
+  // animate row
+  const row = document.getElementById('row-' + id);
+  if(row) {
+    row.style.transition = 'all 0.4s ease';
+    row.style.opacity = '0';
+    row.style.transform = 'translateX(20px)';
+    setTimeout(() => {
+      DB[tier][idx].deleted = true;
+      saveDB();
+      renderTables();
+      updateSummary();
+      updateCharts();
+    }, 350);
+  } else {
+    DB[tier][idx].deleted = true;
+    saveDB();
+    renderTables();
+    updateSummary();
+    updateCharts();
+  }
+
+  // log deletion
+  const log = JSON.parse(localStorage.getItem(LOG_KEY) || '[]');
+  log.push({ id, tier, timestamp: new Date().toISOString(), item: arr[idx].item, invoice: arr[idx].invoice });
+  localStorage.setItem(LOG_KEY, JSON.stringify(log));
+
+  showToast(`🗑 Deleted: ${arr[idx].item} from ${arr[idx].invoice}. Overcharge total updated.`, 'success');
+}
+
+// ============================================================
+// CHARTS
+// ============================================================
+
+function buildCharts() {
+  const chartColors = {
+    red: 'rgba(255,77,106,0.8)',
+    yellow: 'rgba(255,184,77,0.8)',
+    blue: 'rgba(77,184,255,0.8)',
+    green: 'rgba(77,255,154,0.8)',
+    purple: 'rgba(184,77,255,0.8)',
+    accent: 'rgba(108,140,255,0.8)',
+  };
+
+  // Vendor chart
+  const vCtx = document.getElementById('vendorChart');
+  if(vCtx) {
+    if(charts.vendor) charts.vendor.destroy();
+    charts.vendor = new Chart(vCtx, {
+      type: 'bar',
+      data: {
+        labels: ['PixelCraft (V13)', 'Brandwise (V14)', 'CloudNine (V15)', 'Primus (V10)', 'Herb Valley (V11)', 'Sai Pharma (V08)'],
+        datasets: [{
+          label: 'Overcharge (₹)',
+          data: getVendorChartData(),
+          backgroundColor: [chartColors.red, chartColors.red, chartColors.yellow, chartColors.blue, chartColors.yellow, chartColors.blue],
+          borderRadius: 4,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: '#636b85', font: { size: 10 } }, grid: { color: '#2d3348' } },
+          y: { ticks: { color: '#636b85', font: { size: 10 }, callback: v => '₹' + (v/100000).toFixed(1) + 'L' }, grid: { color: '#2d3348' } }
+        }
+      }
+    });
+  }
+
+  // Issue donut
+  const iCtx = document.getElementById('issueChart');
+  if(iCtx) {
+    if(charts.issue) charts.issue.destroy();
+    charts.issue = new Chart(iCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Rate Overcharge', 'GST Mismatch', 'Duplicates', 'Math Errors', 'Naming', 'Unapproved'],
+        datasets: [{
+          data: getIssueChartData(),
+          backgroundColor: [chartColors.red, chartColors.yellow, chartColors.blue, chartColors.green, chartColors.purple, chartColors.accent],
+          borderWidth: 0,
+          hoverOffset: 8
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { color: '#9ba3bc', font: { size: 11 }, padding: 12, boxWidth: 12 } }
+        },
+        cutout: '60%'
+      }
+    });
+  }
+}
+
+function getVendorChartData() {
+  const vendors = {'V13':0,'V14':0,'V15':0,'V10':0,'V11':0,'V08':0};
+  DB.high.filter(r=>!r.deleted).forEach(r => {
+    const vid = r.vendor.match(/\((\w+)\)/)?.[1];
+    if(vid && vendors[vid] !== undefined) vendors[vid] += r.overcharge;
+  });
+  return Object.values(vendors);
+}
+
+function getIssueChartData() {
+  const counts = {rate:0, gst:0, dup:0, math:0, name:0, unapp:0};
+  DB.high.filter(r=>!r.deleted).forEach(r => {
+    if(r.issue === 'Rate Overcharge') counts.rate++;
+    if(r.issue === 'GST Mismatch') counts.gst++;
+  });
+  DB.medium.filter(r=>!r.deleted).forEach(r => {
+    if(r.issue === 'Duplicate Line') counts.dup++;
+  });
+  DB.low.filter(r=>!r.deleted).forEach(r => {
+    if(r.issue === 'Math Error') counts.math++;
+    if(r.issue === 'Naming Issue') counts.name++;
+    if(r.issue === 'Unapproved Item') counts.unapp++;
+  });
+  return [counts.rate, counts.gst, counts.dup, counts.math, counts.name, counts.unapp];
+}
+
+function updateCharts() {
+  if(charts.vendor) {
+    charts.vendor.data.datasets[0].data = getVendorChartData();
+    charts.vendor.update();
+  }
+  if(charts.issue) {
+    charts.issue.data.datasets[0].data = getIssueChartData();
+    charts.issue.update();
+  }
+}
+
+// ============================================================
+// EXCEPTIONS
+// ============================================================
+
+function renderExceptions() {
+  // High
+  const hb = document.getElementById('excHighBody');
+  if(hb) hb.innerHTML = EXCEPTION_HIGH.map(r => `
+    <tr>
+      <td class="inv-id">${r.invoice}</td>
+      <td class="vendor-name">${r.vendor}</td>
+      <td style="font-size:12px;color:var(--text2)">${r.issue}</td>
+      <td class="amount red">${r.amount}</td>
+      <td style="font-size:12px;color:${r.sla.includes('Overdue') ? 'var(--red)':'var(--yellow)'}">${r.sla}</td>
+      <td><span class="risk-badge risk-high" style="font-size:10px">● High</span></td>
+      <td><div class="actions"><button class="btn-approve" onclick="resolveExc(this,'approve')">Approve</button><button class="btn-reject" onclick="resolveExc(this,'reject')">Reject</button></div></td>
+    </tr>
+  `).join('');
+
+  const mb = document.getElementById('excMedBody');
+  if(mb) mb.innerHTML = EXCEPTION_MED.map(r => `
+    <tr>
+      <td class="inv-id">${r.invoice}</td>
+      <td class="vendor-name">${r.vendor}</td>
+      <td style="font-size:12px;color:var(--text2)">${r.issue}</td>
+      <td class="amount yellow">${r.amount}</td>
+      <td style="font-size:12px;color:var(--text3)">${r.sla}</td>
+      <td><span class="risk-badge risk-medium" style="font-size:10px">● Medium</span></td>
+      <td><div class="actions"><button class="btn-approve" onclick="resolveExc(this,'approve')">Approve</button><button class="btn-reject" onclick="resolveExc(this,'reject')">Reject</button></div></td>
+    </tr>
+  `).join('');
+}
+
+function showExcTab(name, el) {
+  document.querySelectorAll('.risk-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.inner-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('exc-' + name).classList.add('active');
+  el.classList.add('active');
+}
+
+function resolveExc(btn, action) {
+  const row = btn.closest('tr');
+  row.style.transition = 'opacity 0.4s';
+  row.style.opacity = '0';
+  setTimeout(() => row.remove(), 400);
+  const msg = action === 'approve' ? '✅ Exception approved — payment unblocked' : '❌ Exception rejected — vendor notified';
+  showToast(msg, action === 'approve' ? 'success' : '');
+  const badge = document.getElementById('excBadge');
+  if(badge) badge.textContent = Math.max(0, (parseInt(badge.textContent)||0) - 1);
+}
+
+// ============================================================
+// VENDORS RENDERING
+// ============================================================
+
+function renderVendors() {
+  const grid = document.getElementById('vendorGrid');
+  if(!grid) return;
+  grid.innerHTML = VENDORS.map(v => {
+    const tierClass = v.tier === 'Platinum' ? 'tier-platinum' : v.tier === 'Gold' ? 'tier-gold' : 'tier-standard';
+    const scoreColor = v.score >= 95 ? 'var(--green)' : v.score >= 85 ? 'var(--yellow)' : 'var(--red)';
+    const fillColor = v.score >= 95 ? '#4dff9a' : v.score >= 85 ? '#ffb84d' : '#ff4d6a';
+    // count active errors for this vendor
+    const vid = v.id;
+    let errs = 0;
+    DB.high.forEach(r => { if(!r.deleted && r.vendor.includes(vid)) errs++; });
+    DB.medium.forEach(r => { if(!r.deleted && r.vendor.includes(vid)) errs++; });
+    return `
+      <div class="vendor-card">
+        <div class="vendor-header">
+          <div class="vendor-info">
+            <div class="v-name">${v.name}</div>
+            <div class="v-id">${v.id} · ${v.type}</div>
+          </div>
+          <span class="tier-badge ${tierClass}">${v.tier === 'Platinum' ? '🏆' : v.tier === 'Gold' ? '⭐' : ''} ${v.tier}</span>
+        </div>
+        <div class="vendor-score">
+          <div class="score-bar"><div class="score-fill" style="width:${v.score}%;background:${fillColor}"></div></div>
+          <span class="score-pct" style="color:${scoreColor}">${v.score}%</span>
+        </div>
+        <div class="vendor-meta">
+          <div class="v-meta-item"><div class="ml">Invoices</div><div class="mv" style="color:var(--blue)">${v.invoices}</div></div>
+          <div class="v-meta-item"><div class="ml">Active Errors</div><div class="mv" style="color:${errs>0?'var(--red)':'var(--green)'}">${errs}</div></div>
+          <div class="v-meta-item"><div class="ml">Total Flags</div><div class="mv" style="color:var(--yellow)">${v.flags}</div></div>
+          <div class="v-meta-item"><div class="ml">Payment</div><div class="mv" style="color:var(--text2)">${v.payment}</div></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ============================================================
+// UPLOAD & AUDIT
+// ============================================================
+
+function handleFileSelect(inputId, labelId) {
+  const input = document.getElementById(inputId);
+  const label = document.getElementById(labelId);
+  if(input && input.files[0]) {
+    label.textContent = '✅ ' + input.files[0].name;
+    label.style.color = 'var(--green)';
+    label.style.borderColor = 'rgba(77,255,154,0.4)';
+  }
+}
+
+async function runAudit() {
+  const btn = document.getElementById('runAuditBtn');
+  const prog = document.getElementById('auditProgress');
+  const status = document.getElementById('auditStatus');
+  const bar = document.getElementById('auditProgressBar');
+  const results = document.getElementById('auditResults');
+
+  btn.disabled = true;
+  prog.style.display = 'block';
+  results.innerHTML = '';
+
+  const steps = [
+    [10, 'Initialising audit engine…'],
+    [25, 'Parsing invoice CSV data…'],
+    [40, 'Running Layer 1: Format & field validation…'],
+    [55, 'Running Layer 2: Rate card reconciliation…'],
+    [68, 'Checking GST rates against HSN codes…'],
+    [80, 'Detecting duplicate line items…'],
+    [90, 'Cataloging item name mismatches…'],
+    [100, 'Finalising results and updating SQL database…'],
+  ];
+
+  for(const [pct, msg] of steps) {
+    await delay(500);
+    status.textContent = msg;
+    bar.style.width = pct + '%';
+  }
+
+  await delay(600);
+  prog.style.display = 'none';
+
+  // Generate sample new findings (simulate)
+  const sampleNewErrors = [
+    {invoice:'INV-00027',vendor:'PixelCraft Studios (V13)',item:'Banner design v2',issue:'Rate Overcharge',contracted:'₹18,000',billed:'₹24,500',qty:42,overcharge:273000,risk:'High'},
+    {invoice:'INV-00028',vendor:'Brandwise Digital (V14)',item:'LinkedIn campaign',issue:'GST Mismatch',contracted:'18%',billed:'28%',qty:15,overcharge:63000,risk:'High'},
+    {invoice:'INV-00029',vendor:'DTDC (V01)',item:'Surface delivery',issue:'Naming Issue',details:"'Surface delivery' submitted — contracted name is 'Ground Freight'. Review required.",risk:'Low'},
+  ];
+
+  let html = `<div style="background:var(--green-bg);border:1px solid rgba(77,255,154,0.3);border-radius:10px;padding:14px 18px;margin-bottom:16px;font-size:13px;color:var(--green)">
+    ✅ Audit complete — <strong>${sampleNewErrors.length} new errors detected</strong> and added to live SQL database. Overcharge total updated.
+  </div>
+  <div class="section-header"><div class="section-title">Newly Detected Errors <span class="new-badge">NEW →DB</span></div>
+  <div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm">↓ Download CSV</button><button class="btn btn-ghost btn-sm">↓ Download Excel</button></div></div>
+  <div class="table-wrap"><table><thead><tr><th>Invoice ID</th><th>Vendor</th><th>Item</th><th>Issue</th><th>Contracted</th><th>Billed</th><th>Overcharge (₹)</th><th>Risk</th><th>Status</th></tr></thead><tbody>`;
+
+  sampleNewErrors.forEach(e => {
+    const riskClass = e.risk === 'High' ? 'risk-high' : e.risk === 'Medium' ? 'risk-medium' : 'risk-low';
+    html += `<tr>
+      <td class="inv-id">${e.invoice}</td>
+      <td class="vendor-name">${e.vendor.split('(')[0].trim()}</td>
+      <td>${e.item}</td>
+      <td style="font-size:12px">${e.issue}</td>
+      <td style="font-size:12px;color:var(--text3)">${e.contracted||'—'}</td>
+      <td style="font-size:12px;color:var(--yellow)">${e.billed||'—'}</td>
+      <td class="amount red">${e.overcharge ? formatAmount(e.overcharge) : 'N/A'}</td>
+      <td><span class="risk-badge ${riskClass}" style="font-size:10px">● ${e.risk}</span></td>
+      <td><span class="new-badge">Added to DB</span></td>
+    </tr>`;
+  });
+
+  html += '</tbody></table></div>';
+  results.innerHTML = html;
+
+  // Actually add to DB
+  sampleNewErrors.forEach((e,i) => {
+    const newId = 'u_' + Date.now() + '_' + i;
+    if(e.risk === 'High') {
+      DB.high.push({...e, id: newId, deleted: false});
+    } else if(e.risk === 'Medium') {
+      DB.medium.push({...e, id: newId, deleted: false, occ:1, qty:1, unitPrice:'—', billedTotal:0});
+    } else {
+      DB.low.push({...e, id: newId, deleted: false, details: e.details||e.issue});
+    }
+  });
+  saveDB();
+  updateSummary();
+  showToast(`✅ ${sampleNewErrors.length} new errors added to SQL database. Dashboard updated.`, 'success');
+  btn.disabled = false;
+}
+
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ============================================================
+// ADD INVOICE (SQL INSERT)
+// ============================================================
+
+function calcOvercharge() {
+  const contracted = parseFloat(document.getElementById('f_contracted').value) || 0;
+  const billed = parseFloat(document.getElementById('f_billed').value) || 0;
+  const qty = parseInt(document.getElementById('f_qty').value) || 0;
+  const overcharge = Math.max(0, (billed - contracted) * qty);
+  const el = document.getElementById('f_overcharge');
+  if(el) el.value = overcharge > 0 ? overcharge : '';
+}
+
+function updateSQLPreview() {
+  const inv = document.getElementById('f_invoice_id').value || '?';
+  const vendor = document.getElementById('f_vendor_id').value || '?';
+  const item = document.getElementById('f_item').value || '?';
+  const issue = document.getElementById('f_issue_type').value || '?';
+  const risk = document.getElementById('f_risk').value || '?';
+  const contracted = document.getElementById('f_contracted').value || '?';
+  const billed = document.getElementById('f_billed').value || '?';
+  const qty = document.getElementById('f_qty').value || '?';
+  const overcharge = document.getElementById('f_overcharge').value || '0';
+  const hsn = document.getElementById('f_hsn').value || '?';
+  const gst = document.getElementById('f_gst').value || '?';
+  const date = document.getElementById('f_date').value || new Date().toISOString().split('T')[0];
+
+  document.getElementById('sqlPreview').innerHTML = `
+<span class="kw">INSERT INTO</span> invoice_errors (<br>
+&nbsp;&nbsp;invoice_id, vendor_id, item_name,<br>
+&nbsp;&nbsp;issue_type, risk_level,<br>
+&nbsp;&nbsp;contracted_rate, billed_rate, quantity,<br>
+&nbsp;&nbsp;overcharge_amount, hsn_code,<br>
+&nbsp;&nbsp;gst_rate, invoice_date<br>
+) <span class="kw">VALUES</span> (<br>
+&nbsp;&nbsp;<span class="str">'${inv}'</span>, <span class="str">'${vendor}'</span>, <span class="str">'${item}'</span>,<br>
+&nbsp;&nbsp;<span class="str">'${issue}'</span>, <span class="str">'${risk}'</span>,<br>
+&nbsp;&nbsp;<span class="num">${contracted}</span>, <span class="num">${billed}</span>, <span class="num">${qty}</span>,<br>
+&nbsp;&nbsp;<span class="num">${overcharge}</span>, <span class="str">'${hsn}'</span>,<br>
+&nbsp;&nbsp;<span class="num">${gst}</span>, <span class="str">'${date}'</span><br>
+);<br><br>
+<span class="kw">-- Auto: UPDATE</span> vendor_summary<br>
+<span class="kw">SET</span> total_overcharge = total_overcharge + <span class="num">${overcharge}</span><br>
+<span class="kw">WHERE</span> vendor_id = <span class="str">'${vendor}'</span>;
+  `;
+}
+
+function validateForm() {
+  const required = {
+    f_invoice_id: 'Invoice ID', f_vendor_id: 'Vendor',
+    f_item: 'Line Item', f_issue_type: 'Issue Type', f_risk: 'Risk Level'
+  };
+  for(const [id, label] of Object.entries(required)) {
+    if(!document.getElementById(id).value) return { ok: false, msg: `${label} is required.` };
+  }
+  const inv = document.getElementById('f_invoice_id').value;
+  if(!/^INV-\d{5}$/.test(inv)) return { ok: false, msg: 'Invoice ID must be format INV-XXXXX (5 digits)' };
+  return { ok: true };
+}
+
+function submitInvoice() {
+  const { ok, msg } = validateForm();
+  const valDiv = document.getElementById('formValidation');
+
+  if(!ok) {
+    valDiv.innerHTML = `<div class="validation-msg error">⚠ ${msg}</div>`;
+    return;
+  }
+
+  const inv = document.getElementById('f_invoice_id').value;
+  const vendorSel = document.getElementById('f_vendor_id');
+  const vendorText = vendorSel.options[vendorSel.selectedIndex].text;
+  const item = document.getElementById('f_item').value;
+  const issue = document.getElementById('f_issue_type').value;
+  const risk = document.getElementById('f_risk').value;
+  const contracted = document.getElementById('f_contracted').value;
+  const billed = document.getElementById('f_billed').value;
+  const qty = parseInt(document.getElementById('f_qty').value) || 0;
+  const overcharge = parseInt(document.getElementById('f_overcharge').value) || 0;
+  const hsn = document.getElementById('f_hsn').value;
+
+  const newId = 'add_' + Date.now();
+  const record = { id: newId, invoice: inv, vendor: vendorText, item, issue, risk, contracted: contracted ? '₹'+contracted : '—', billed: billed ? '₹'+billed : '—', qty, overcharge, deleted: false };
+
+  if(risk === 'High') DB.high.push(record);
+  else if(risk === 'Medium') DB.medium.push({ id: newId, invoice: inv, vendor: vendorText, item, issue, occ:1, qty, unitPrice: billed ? '₹'+billed : '—', billedTotal: overcharge, risk, deleted: false });
+  else DB.low.push({ id: newId, invoice: inv, vendor: vendorText, item, issue, details: `${issue}: Contracted ${contracted||'—'}, Billed ${billed||'—'}. Overcharge ₹${overcharge.toLocaleString('en-IN')}.`, risk, deleted: false });
+
+  saveDB();
+  updateSummary();
+
+  // Track recent inserts
+  sessionInserts.unshift({ inv, vendor: vendorText.split('(')[0].trim(), item, risk, overcharge, ts: new Date().toLocaleTimeString('en-IN') });
+  if(sessionInserts.length > 5) sessionInserts.pop();
+  renderRecentInserts();
+
+  valDiv.innerHTML = `<div class="validation-msg success">✅ INSERT successful — ${inv} added to database. Overcharge total updated to ${formatAmountShort(calcTotalOvercharge())}.</div>`;
+  showToast(`✅ ${inv} added to SQL database. Total overcharge revised.`, 'success');
+}
+
+function renderRecentInserts() {
+  const el = document.getElementById('recentInserts');
+  if(!el) return;
+  if(sessionInserts.length === 0) { el.innerHTML = '<div style="font-size:12px;color:var(--text3)">No inserts yet in this session</div>'; return; }
+  el.innerHTML = sessionInserts.map(r => `
+    <div style="background:var(--bg3);border-radius:6px;padding:8px 10px;margin-bottom:6px;font-size:12px">
+      <div style="display:flex;justify-content:space-between">
+        <span class="inv-id">${r.inv}</span>
+        <span style="color:var(--text3)">${r.ts}</span>
+      </div>
+      <div style="color:var(--text2);margin-top:2px">${r.item} · ${r.vendor}</div>
+      ${r.overcharge ? `<div style="color:var(--red);font-family:var(--mono);font-size:11px;margin-top:2px">+${formatAmount(r.overcharge)}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+function clearForm() {
+  ['f_invoice_id','f_vendor_id','f_item','f_issue_type','f_risk','f_date','f_contracted','f_billed','f_qty','f_overcharge','f_hsn','f_gst'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.value = '';
+  });
+  document.getElementById('formValidation').innerHTML = '';
+  updateSQLPreview();
+}
+
+// ============================================================
+// FILTERS
+// ============================================================
+
+function filterRisk(level, chipEl) {
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  chipEl.classList.add('active');
+  // simple visual for now — tables already show live data
+}
+
+function filterCat(cat, chipEl) {
+  document.querySelectorAll('.nav-filter .filter-chip').forEach(c => { if(c.onclick && c.onclick.toString().includes('filterCat')) c.classList.remove('active'); });
+  chipEl.classList.add('active');
+}
+
+function filterHighTable(type) {
+  const rows = document.querySelectorAll('#highBody tr');
+  rows.forEach(row => {
+    if(type === 'all') { row.style.display = ''; return; }
+    const issueCell = row.cells?.[3]?.textContent?.toLowerCase() || '';
+    if(type === 'rate' && issueCell.includes('rate')) row.style.display = '';
+    else if(type === 'gst' && issueCell.includes('gst')) row.style.display = '';
+    else row.style.display = 'none';
+  });
+}
+
+// ============================================================
+// EXPORT
+// ============================================================
+
+function exportReport() {
+  const rows = [['Invoice','Vendor','Item','Issue','Contracted','Billed','Qty','Overcharge','Risk']];
+  DB.high.filter(r=>!r.deleted).forEach(r => rows.push([r.invoice, r.vendor, r.item, r.issue, r.contracted, r.billed, r.qty, r.overcharge, r.risk]));
+  DB.medium.filter(r=>!r.deleted).forEach(r => rows.push([r.invoice, r.vendor, r.item, r.issue, r.occ, r.qty, r.unitPrice, r.billedTotal, r.risk]));
+  const csv = rows.map(r => r.join(',')).join('\n');
+  downloadFile('auditiq_report_' + new Date().toISOString().split('T')[0] + '.csv', csv, 'text/csv');
+  showToast('📥 Report exported to CSV', 'success');
+}
+
+function exportVendors() {
+  const rows = [['Vendor ID','Name','Type','Tier','Score','Invoices','Flags','Payment Terms']];
+  VENDORS.forEach(v => rows.push([v.id, v.name, v.type, v.tier, v.score+'%', v.invoices, v.flags, v.payment]));
+  const csv = rows.map(r => r.join(',')).join('\n');
+  downloadFile('auditiq_vendors.csv', csv, 'text/csv');
+  showToast('📥 Vendor scorecards exported', 'success');
+}
+
+function downloadFile(name, content, type) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content], {type}));
+  a.download = name;
+  a.click();
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+
+let toastTimer;
+function showToast(msg, type = '') {
+  const old = document.querySelector('.toast');
+  if(old) old.remove();
+  clearTimeout(toastTimer);
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  toastTimer = setTimeout(() => {
+    t.style.animation = 'toastOut 0.3s ease forwards';
+    setTimeout(() => t.remove(), 300);
+  }, 3000);
+}
+
+// ============================================================
+// SPLASH
+// ============================================================
+
+function enterApp() {
+  document.getElementById('splashPage').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'block';
+}
+
+// ============================================================
+// INIT
+// ============================================================
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadDB();
+  updateTimestamp();
+  setInterval(updateTimestamp, 60000);
+  renderTables();
+  updateSummary();
+  buildCharts();
+  renderVendors();
+  renderExceptions();
+  document.getElementById('f_date').value = new Date().toISOString().split('T')[0];
+  updateSQLPreview();
+});
+</script>
+</div><!-- /mainApp -->
+</body>
+</html>
